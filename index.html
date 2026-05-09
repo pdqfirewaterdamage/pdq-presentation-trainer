@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/[email protected]/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* =====================================================================
    PDQ Sales Academy — design system inherits from the approved deck
@@ -1570,12 +1571,31 @@ const SUPABASE_URL = "https://jipqddhfztfjppufnost.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_12FfRld5h-nBaXWaUutjPQ_0X_BP_eI";
 
 let supa = null;
-try{
-  if(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY && !SUPABASE_PUBLISHABLE_KEY.startsWith("PASTE_")){
+function initSupabase(){
+  try{
+    if(!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLISHABLE_KEY.startsWith("PASTE_")){
+      console.warn("[PDQ] Supabase config missing — running in local-only mode.");
+      return;
+    }
+    if(!window.supabase || typeof window.supabase.createClient !== "function"){
+      console.warn("[PDQ] Supabase JS library not loaded yet. window.supabase =", window.supabase);
+      return;
+    }
     supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    console.log("[PDQ] Supabase initialized successfully. Real backend is ENABLED.");
+  }catch(e){
+    console.warn("[PDQ] Supabase init failed:", e);
   }
-}catch(e){
-  console.warn("Supabase init failed, falling back to local-only mode:", e);
+}
+
+// Try immediately; if the CDN script hasn't finished loading yet, retry on window load.
+initSupabase();
+if(!supa){
+  if(document.readyState === "complete"){
+    setTimeout(initSupabase, 200);
+  } else {
+    window.addEventListener("load", ()=> setTimeout(initSupabase, 100));
+  }
 }
 
 const BACKEND_ENABLED = () => !!supa;
