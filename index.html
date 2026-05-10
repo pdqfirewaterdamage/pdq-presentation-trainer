@@ -1610,14 +1610,14 @@ async function uploadRecording(blob, slide){
   const ext = (blob.type && blob.type.includes("mp4")) ? "mp4" : "webm";
   const path = `slides/${slide.id}/${userId}_${ts}.${ext}`;
 
-  const { error } = await supa.storage.from("recordings").upload(path, blob, {
+  const { error } = await supa.storage.from("Recordings").upload(path, blob, {
     contentType: blob.type || "video/webm",
     upsert: false,
   });
   if(error) throw new Error("Upload failed: " + error.message);
 
   // Generate a 30-minute signed URL so AssemblyAI can fetch it
-  const { data, error: urlErr } = await supa.storage.from("recordings").createSignedUrl(path, 60 * 30);
+  const { data, error: urlErr } = await supa.storage.from("Recordings").createSignedUrl(path, 60 * 30);
   if(urlErr) throw new Error("Signed URL failed: " + urlErr.message);
 
   return { path, signedUrl: data.signedUrl };
