@@ -749,6 +749,17 @@ body{
   background:linear-gradient(135deg, var(--pdq-green), var(--pdq-green-deep));
   color:#fff;
 }
+.btn-warn{
+  background:linear-gradient(135deg, #c93030, var(--warn));
+  color:#fff;
+  border:none;
+}
+.btn-warn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 4px 12px -2px rgba(178,34,34,.45); }
+.btn-sm{
+  padding:7px 12px;
+  font-size:10.5px;
+  letter-spacing:.1em;
+}
 .btn-icon{ width:14px; height:14px; }
 
 .rec-tip{
@@ -1335,6 +1346,27 @@ body{
 .delta.up{ color:var(--pdq-green-deep); }
 .delta.down{ color:var(--warn); }
 
+/* ---------- Admin bulk actions ---------- */
+.admin-bulk-body{ padding:18px 22px; }
+.admin-bulk-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+  flex-wrap:wrap;
+}
+.admin-bulk-select{
+  flex:1 1 280px;
+  min-width:0;
+  max-width:100%;
+}
+.admin-bulk-row .btn{ flex:0 0 auto; }
+.admin-actions-cell{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.admin-actions-cell .btn{ white-space:nowrap; }
+
 /* ---------- Mobile / Tablet ---------- */
 /* prevent any overflow from causing horizontal page scroll */
 html, body{ max-width:100%; overflow-x:hidden; }
@@ -1348,15 +1380,24 @@ html, body{ max-width:100%; overflow-x:hidden; }
     align-items:center;
     padding:12px 14px;
     gap:12px;
+    width:100%;
+    min-width:0;
+    overflow:hidden;
   }
   .brand{ padding:0; border-bottom:none; flex-shrink:0; }
   .brand-logo{ width:36px; height:36px; font-size:16px; }
-  .brand-name{ font-size:14px; }
-  .brand-sub{ font-size:10px; }
-  .nav{ flex-direction:row; overflow-x:auto; gap:2px; flex:1; -webkit-overflow-scrolling:touch; }
+  .brand-text{ display:none; }    /* hide name+sub on mobile to save space; logo is enough */
+  .nav{
+    flex:1 1 0;
+    min-width:0;
+    flex-direction:row;
+    overflow-x:auto;
+    gap:2px;
+    -webkit-overflow-scrolling:touch;
+  }
   .nav::-webkit-scrollbar{ display:none; }
   .nav-section{ display:none; }
-  .nav-item{ white-space:nowrap; padding:7px 11px; font-size:11.5px; }
+  .nav-item{ white-space:nowrap; padding:7px 11px; font-size:11.5px; flex-shrink:0; }
   .sidebar-footer{ display:none; }
 
   .main{ padding:20px 16px 60px; }
@@ -1432,6 +1473,18 @@ html, body{ max-width:100%; overflow-x:hidden; }
 
   /* manager grid collapses already; tighten */
   .manager-grid{ gap:18px; }
+
+  /* admin panel mobile tweaks */
+  .admin-bulk-body{ padding:14px 16px; }
+  .admin-bulk-row{ flex-direction:column; gap:8px; }
+  .admin-bulk-select{ flex:1 1 auto; width:100%; }
+  .admin-bulk-row .btn{ width:100%; justify-content:center; }
+  /* admin user table has many columns — let it scroll horizontally */
+  .admin-table{ min-width:640px; }
+  .btn-sm{ padding:6px 10px; font-size:10px; letter-spacing:.08em; }
+
+  /* coach summary block — tighten margins */
+  .coach-summary-block{ margin:18px 0; padding:14px 16px; font-size:14px; }
 
   /* onboard card */
   .onboard-card{ padding:28px 24px; }
@@ -1524,6 +1577,10 @@ html, body{ max-width:100%; overflow-x:hidden; }
       <div class="nav-item" data-route="manager">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21 V19 a4 4 0 0 1 4-4 H10 a4 4 0 0 1 4 4 V21"/><circle cx="8.5" cy="9" r="3.5"/><path d="M16 11 V13 M16 16 V19 M19 14 H21 M11 14 H13"/><circle cx="17" cy="14" r="3" stroke-dasharray="1 2"/></svg>
         Team Dashboard
+      </div>
+      <div class="nav-item nav-item-admin hidden" data-route="admin" id="adminNavItem">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 L3 6 V12 a9 9 0 0 0 9 9 a9 9 0 0 0 9 -9 V6 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
+        Admin
       </div>
     </nav>
 
@@ -2023,15 +2080,7 @@ const defaultStore = {
   attempts: [],               // { id, slideId, score, sub, ts, transcript? }
   lastDailyTs: 0,
   streak: 0,
-  // mock team data for manager view
-  team: [
-    {name:'Mike Reilly',     role:'Sales Tech',     avg:91, attempts:34, streak:14, lastActive:'today',     weakest:'filing'},
-    {name:'Sara Chen',       role:'Project Mgr',    avg:87, attempts:28, streak:9,  lastActive:'today',     weakest:'clock'},
-    {name:'Devon Williams',  role:'Sales Tech',     avg:82, attempts:22, streak:6,  lastActive:'today',     weakest:'preferred'},
-    {name:'Carla Ortiz',     role:'Project Mgr',    avg:79, attempts:19, streak:4,  lastActive:'1 day ago', weakest:'claim'},
-    {name:'Jamal Brooks',    role:'Sales Tech',     avg:74, attempts:14, streak:0,  lastActive:'3 days ago',weakest:'questions'},
-    {name:'Tony Russo',      role:'Sales Tech',     avg:68, attempts:9,  streak:0,  lastActive:'5 days ago',weakest:'filing'}
-  ]
+  team: [] // populated from Supabase at runtime; no fake demo data
 };
 
 function deepClone(obj){
@@ -2185,6 +2234,7 @@ const routes = {
   modules:   renderModules,
   history:   renderHistory,
   manager:   renderManager,
+  admin:     renderAdmin,
   module:    renderModule, // takes ?id
 };
 let currentRoute = 'dashboard';
@@ -2933,31 +2983,127 @@ function relativeTime(ts){
 /* =====================================================================
    Manager dashboard
    ===================================================================== */
-function renderManager(){
-  // Build a synthetic "team" view that includes the current user too
-  const myProg = deckProgress();
-  const me = {
-    name: store.user?.name || 'You',
-    role: store.user?.role === 'manager' ? 'Manager' : 'Trainee',
-    avg: myProg.avg || 0,
-    attempts: store.attempts.length,
-    streak: store.streak || 0,
-    lastActive: store.attempts.length ? (isToday(store.attempts[store.attempts.length-1].ts) ? 'today' : relativeTime(store.attempts[store.attempts.length-1].ts)) : '—',
-    weakest: weakestSlideForMe()
-  };
-  const team = [me, ...store.team];
+async function fetchTeamFromSupabase(){
+  if(!BACKEND_ENABLED()) return [];
+  try{
+    // Pull all users
+    const { data: users, error: uErr } = await supa.from('users').select('id, name, role, created_at');
+    if(uErr){ console.warn('fetchTeam users error:', uErr); return []; }
 
-  // Compute company-wide weak slides
-  const slideAggregates = SLIDES.map(s => {
-    const fakeBests = store.team.map(t => Math.max(40, t.avg - (t.weakest === s.id ? 18 : 0) + (Math.random()*10 - 5)));
-    const myBest = bestFor(s.id);
-    if(myBest) fakeBests.push(myBest);
-    const avg = Math.round(fakeBests.reduce((a,b)=>a+b,0)/fakeBests.length);
-    return { slide:s, avg };
-  }).sort((a,b)=>a.avg-b.avg);
+    // Pull all attempts (just the columns we need)
+    const { data: attempts, error: aErr } = await supa.from('attempts')
+      .select('user_id, slide_id, overall_score, created_at');
+    if(aErr){ console.warn('fetchTeam attempts error:', aErr); return []; }
+
+    // Aggregate per user
+    return (users || []).map(u => {
+      const mine = (attempts || []).filter(a => a.user_id === u.id);
+      const scores = mine.map(a => a.overall_score).filter(n => n != null);
+      const avg = scores.length ? Math.round(scores.reduce((s,x)=>s+x,0)/scores.length) : 0;
+      const lastTs = mine.length ? Math.max(...mine.map(a => new Date(a.created_at).getTime())) : 0;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const isTodayActive = lastTs && new Date(lastTs) >= today;
+
+      // Per-slide best
+      const bySlide = {};
+      mine.forEach(a => {
+        if(a.overall_score == null) return;
+        if(!bySlide[a.slide_id] || a.overall_score > bySlide[a.slide_id]) bySlide[a.slide_id] = a.overall_score;
+      });
+      const slideEntries = Object.entries(bySlide);
+      const weakest = slideEntries.length
+        ? slideEntries.sort((a,b)=>a[1]-b[1])[0][0]
+        : '—';
+
+      return {
+        id: u.id,
+        name: u.name,
+        role: u.role === 'manager' ? 'Manager' : (u.role || 'Trainee'),
+        avg,
+        attempts: mine.length,
+        streak: 0, // can compute later from attempt dates
+        lastActive: lastTs ? (isTodayActive ? 'today' : relativeTime(lastTs)) : '—',
+        weakest,
+        _lastTs: lastTs,
+      };
+    });
+  }catch(e){
+    console.warn('fetchTeam threw:', e);
+    return [];
+  }
+}
+
+async function renderManager(){
+  $main.innerHTML = `<div class="empty">Loading team data&hellip;</div>`;
+
+  const remoteTeam = await fetchTeamFromSupabase();
+
+  // Always include the current user (in case they haven't synced yet)
+  const myProg = deckProgress();
+  const myRemoteId = store.user?.remoteId;
+  const alreadyInRemote = myRemoteId && remoteTeam.some(t => t.id === myRemoteId);
+
+  let team = [...remoteTeam];
+  if(!alreadyInRemote && store.user){
+    const lastTs = store.attempts.length ? store.attempts[store.attempts.length-1].ts : 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    team.unshift({
+      id: 'local-' + (store.user.id || 'me'),
+      name: store.user.name + ' (you)',
+      role: store.user.role === 'manager' ? 'Manager' : 'Trainee',
+      avg: myProg.avg || 0,
+      attempts: store.attempts.length,
+      streak: store.streak || 0,
+      lastActive: lastTs ? (lastTs >= today.getTime() ? 'today' : relativeTime(lastTs)) : '—',
+      weakest: weakestSlideForMe(),
+      _lastTs: lastTs,
+    });
+  }
+
+  if(team.length === 0){
+    $main.innerHTML = `
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-eyebrow">Team Dashboard</div>
+          <h1 class="page-title">Your <em>presenters</em>, at a glance.</h1>
+          <p class="page-lede">Real team activity will appear here once teammates start logging reps.</p>
+          <div class="page-rule"></div>
+        </div>
+      </div>
+      <div class="empty" style="padding:60px 24px;text-align:center">
+        <div style="font-size:42px;margin-bottom:14px">👥</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--ink);margin-bottom:8px">No team activity yet.</div>
+        <div style="color:var(--ink-mute);max-width:480px;margin:0 auto">
+          ${BACKEND_ENABLED() ? `Once your teammates open the app and start practicing, their progress will appear here automatically.` : `Backend not connected — check your Supabase configuration.`}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Compute company-wide weak slides from real attempts (best score per user per slide)
+  let slideAggregates = [];
+  try{
+    if(BACKEND_ENABLED()){
+      const { data: allAttempts } = await supa.from('attempts').select('user_id, slide_id, overall_score');
+      const bestByUserSlide = {};
+      (allAttempts || []).forEach(a => {
+        if(a.overall_score == null) return;
+        const k = `${a.user_id}|${a.slide_id}`;
+        if(!bestByUserSlide[k] || a.overall_score > bestByUserSlide[k]) bestByUserSlide[k] = a.overall_score;
+      });
+      slideAggregates = SLIDES.map(s => {
+        const bests = Object.entries(bestByUserSlide)
+          .filter(([k]) => k.endsWith('|' + s.id))
+          .map(([,v]) => v);
+        const avg = bests.length ? Math.round(bests.reduce((a,b)=>a+b,0)/bests.length) : null;
+        return { slide: s, avg };
+      }).filter(x => x.avg != null).sort((a,b)=>a.avg-b.avg);
+    }
+  }catch(e){ console.warn('weak slides aggregation failed:', e); }
 
   const trainedToday = team.filter(t=>t.lastActive==='today').length;
-  const teamAvg = Math.round(team.reduce((a,b)=>a+b.avg,0)/team.length);
+  const teamAvg = team.length ? Math.round(team.filter(t=>t.avg>0).reduce((a,b)=>a+b.avg,0)/Math.max(1,team.filter(t=>t.avg>0).length)) : 0;
   const lagging = team.filter(t=>t.streak===0 && t.lastActive!=='today').length;
   const elites  = team.filter(t=>t.avg>=90).length;
 
@@ -2975,11 +3121,11 @@ function renderManager(){
       <div class="stat-card green">
         <div class="stat-label">Trained Today</div>
         <div class="stat-value">${trainedToday}<em>/${team.length}</em></div>
-        <div class="stat-sub">${Math.round(trainedToday/team.length*100)}% participation</div>
+        <div class="stat-sub">${team.length ? Math.round(trainedToday/team.length*100) : 0}% participation</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Team Average</div>
-        <div class="stat-value">${teamAvg}<em>/100</em></div>
+        <div class="stat-value">${teamAvg||'—'}<em>/100</em></div>
         <div class="stat-sub">across all reps</div>
       </div>
       <div class="stat-card warn">
@@ -3043,6 +3189,11 @@ function renderManager(){
           <div class="panel-title">Weakest <em>slides</em></div>
           <div class="panel-tag">company-wide</div>
         </div>
+        ${slideAggregates.length === 0 ? `
+          <div class="empty" style="padding:30px 22px;color:var(--ink-mute);font-size:13px">
+            Not enough scored reps yet to compute company-wide slide weaknesses.
+          </div>
+        ` : `
         <div class="weak-list">
           ${slideAggregates.slice(0,5).map(({slide,avg})=>{
             const widthPct = Math.max(8, avg);
@@ -3066,9 +3217,144 @@ function renderManager(){
             Three reps each, scored.
           </div>
         </div>
+        `}
       </div>
     </div>
   `;
+}
+
+/* =====================================================================
+   ADMIN PANEL
+   Manager-only view for resetting/deleting users and attempts.
+   ===================================================================== */
+async function renderAdmin(){
+  if(!BACKEND_ENABLED()){
+    $main.innerHTML = `
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-eyebrow">Admin</div>
+          <h1 class="page-title">Backend not connected.</h1>
+          <p class="page-lede">The admin panel manages real users and attempts in Supabase. Configure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to use this view.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  $main.innerHTML = `<div class="empty">Loading admin data&hellip;</div>`;
+
+  const team = await fetchTeamFromSupabase();
+
+  $main.innerHTML = `
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-eyebrow">Admin</div>
+        <h1 class="page-title">Manage <em>users</em> and data.</h1>
+        <p class="page-lede">Reset a trainee&rsquo;s attempt history, or remove them entirely. Deletes are permanent.</p>
+        <div class="page-rule"></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head">
+        <div class="panel-title">All <em>users</em></div>
+        <div class="panel-tag">${team.length} total</div>
+      </div>
+      ${team.length === 0 ? `
+        <div class="empty" style="padding:30px 22px;color:var(--ink-mute)">
+          No users in the database yet.
+        </div>
+      ` : `
+        <div class="table-scroll">
+        <table class="team-table admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th style="width:80px">Reps</th>
+              <th style="width:90px">Avg</th>
+              <th style="width:120px">Last Active</th>
+              <th style="width:240px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${team.map(t => `
+              <tr data-user-id="${t.id}">
+                <td><strong>${t.name}</strong></td>
+                <td style="color:var(--ink-mute)">${t.role}</td>
+                <td>${t.attempts}</td>
+                <td><span class="score-pill ${bandFor(t.avg).cls}">${t.avg||'—'}</span></td>
+                <td><span class="last-active ${t.lastActive==='today'?'today':''}">${t.lastActive}</span></td>
+                <td class="admin-actions-cell">
+                  <button class="btn btn-ghost btn-sm admin-reset-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}">Reset</button>
+                  <button class="btn btn-warn btn-sm admin-delete-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      `}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Bulk <em>actions</em></div>
+        <div class="panel-tag">danger zone</div>
+      </div>
+      <div class="admin-bulk-body">
+        <div>
+          <label style="display:block;font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:var(--ink-mute);margin-bottom:6px">Delete all attempts for a slide</label>
+          <div class="admin-bulk-row">
+            <select id="adminBulkSlide" class="onboard-input admin-bulk-select">
+              <option value="">— select a slide —</option>
+              ${SLIDES.map(s => `<option value="${s.id}">${s.num}. ${s.title.replace(/<[^>]+>/g,'')}</option>`).join('')}
+            </select>
+            <button class="btn btn-warn" id="adminBulkDeleteBtn">Delete attempts</button>
+          </div>
+          <div style="font-size:12px;color:var(--ink-mute);margin-top:8px;font-style:italic">Useful when a slide&rsquo;s talking points have changed and old scores no longer apply.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Wire up actions
+  document.querySelectorAll('.admin-reset-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const userId = btn.dataset.userId;
+      const userName = btn.dataset.userName;
+      if(!confirm(`Reset all attempts for ${userName}? Their score history will be wiped, but the user account stays.`)) return;
+      const { error } = await supa.from('attempts').delete().eq('user_id', userId);
+      if(error){ alert('Reset failed: ' + error.message); return; }
+      alert(`Reset ${userName}.`);
+      renderAdmin();
+    });
+  });
+
+  document.querySelectorAll('.admin-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const userId = btn.dataset.userId;
+      const userName = btn.dataset.userName;
+      if(!confirm(`Delete ${userName} entirely? This permanently removes the user and all their attempts. Videos in storage are NOT auto-deleted.`)) return;
+      // Foreign key cascade will remove their attempts
+      const { error } = await supa.from('users').delete().eq('id', userId);
+      if(error){ alert('Delete failed: ' + error.message); return; }
+      alert(`Deleted ${userName}.`);
+      renderAdmin();
+    });
+  });
+
+  document.getElementById('adminBulkDeleteBtn').addEventListener('click', async () => {
+    const sel = document.getElementById('adminBulkSlide');
+    const slideId = sel.value;
+    if(!slideId){ alert('Pick a slide first.'); return; }
+    const slideTitle = SLIDES.find(s=>s.id===slideId)?.title.replace(/<[^>]+>/g,'') || slideId;
+    if(!confirm(`Delete ALL attempts on "${slideTitle}" across the entire team? This cannot be undone.`)) return;
+    const { error } = await supa.from('attempts').delete().eq('slide_id', slideId);
+    if(error){ alert('Bulk delete failed: ' + error.message); return; }
+    alert(`Deleted all attempts on slide "${slideTitle}".`);
+    renderAdmin();
+  });
 }
 
 function weakestSlideForMe(){
@@ -3110,13 +3396,42 @@ function updateUserPill(){
   document.getElementById('userName').textContent = store.user.name;
   document.getElementById('userRole').textContent = store.user.role === 'manager' ? 'Manager' : 'Trainee';
   document.getElementById('userAvatar').textContent = store.user.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  // Reveal Admin nav only for managers
+  const adminNav = document.getElementById('adminNavItem');
+  if(adminNav){
+    adminNav.classList.toggle('hidden', store.user.role !== 'manager');
+  }
 }
 
 document.getElementById('userPill').addEventListener('click', ()=>{
-  if(confirm('Reset your trainee profile and clear all attempts?')){
-    localStorage.removeItem(STORE_KEY);
-    store = loadStore();
-    location.reload();
+  if(!store.user) return;
+  const isManager = store.user.role === 'manager';
+  const choice = prompt(
+    `${store.user.name} — ${isManager ? 'Manager' : 'Trainee'}\n\n` +
+    `Type one of:\n` +
+    `  switch — toggle ${isManager ? 'to Trainee' : 'to Manager'}\n` +
+    `  reset  — clear my local profile and attempts\n` +
+    `  cancel — do nothing`,
+    'cancel'
+  );
+  if(!choice) return;
+  const c = choice.trim().toLowerCase();
+  if(c === 'switch'){
+    store.user.role = isManager ? 'trainee' : 'manager';
+    saveStore(store);
+    // Also update the remote user record if it exists
+    if(BACKEND_ENABLED() && store.user.remoteId){
+      supa.from('users').update({ role: store.user.role }).eq('id', store.user.remoteId)
+        .then(({error}) => { if(error) console.warn('role update failed:', error); });
+    }
+    updateUserPill();
+    navigate(store.user.role === 'manager' ? 'manager' : 'dashboard');
+  } else if(c === 'reset'){
+    if(confirm('Clear your local profile and attempts? (Remote data in Supabase is NOT deleted.)')){
+      localStorage.removeItem(STORE_KEY);
+      store = loadStore();
+      location.reload();
+    }
   }
 });
 
