@@ -169,6 +169,19 @@ body{
 .user-name{ font-size:12.5px; font-weight:600; color:var(--ink); }
 .user-role{ font-size:10px; color:var(--ink-mute); letter-spacing:.04em; }
 
+.app-version{
+  margin-top:10px;
+  padding:6px 10px;
+  font-family:'Inter',sans-serif;
+  font-size:9.5px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--ink-mute);
+  text-align:center;
+  opacity:.55;
+}
+
 /* ---------- Main content ---------- */
 .main{
   padding:36px 48px 80px;
@@ -1617,6 +1630,219 @@ body{
 }
 .admin-add-row .btn{ flex:0 0 auto; }
 
+/* ---------- Bio Viewer Modal (Admin) ---------- */
+.bio-modal-overlay{
+  position:fixed; inset:0;
+  background:rgba(20,28,40,0.55);
+  backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999;
+  padding:24px;
+  animation:bioFadeIn .18s ease-out;
+}
+@keyframes bioFadeIn{ from{opacity:0;} to{opacity:1;} }
+.bio-modal{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 24px 60px rgba(0,0,0,.22);
+  width:100%;
+  max-width:720px;
+  max-height:90vh;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  animation:bioSlideIn .22s ease-out;
+}
+@keyframes bioSlideIn{ from{transform:translateY(12px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+.bio-modal-head{
+  position:relative;
+  padding:20px 56px 16px 24px;
+  border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(180deg, #fafbfc, #ffffff);
+}
+.bio-modal-eyebrow{
+  font-family:'Inter',sans-serif;
+  font-size:9.5px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--pdq-blue);
+  margin-bottom:4px;
+}
+.bio-modal-h{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:22px;
+  color:var(--ink);
+  letter-spacing:-.01em;
+  margin:0;
+}
+.bio-modal-close{
+  position:absolute;
+  top:14px; right:14px;
+  width:32px; height:32px;
+  border:none;
+  background:transparent;
+  border-radius:6px;
+  font-size:24px;
+  line-height:1;
+  color:var(--ink-mute);
+  cursor:pointer;
+}
+.bio-modal-close:hover{ background:var(--paper); color:var(--ink); }
+.bio-modal-content{
+  padding:20px 24px;
+  overflow-y:auto;
+  flex:1 1 auto;
+}
+.bio-modal-section{
+  margin-bottom:20px;
+}
+.bio-modal-section:last-child{ margin-bottom:0; }
+.bio-modal-header-row{
+  display:flex; gap:16px; align-items:center;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--line-soft);
+}
+.bio-modal-photo-wrap{ flex:0 0 auto; }
+.bio-modal-photo{
+  width:72px; height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--line);
+}
+.bio-modal-meta{ flex:1; min-width:0; }
+.bio-modal-fullname{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:18px;
+  color:var(--ink);
+  margin-bottom:2px;
+}
+.bio-modal-title{
+  font-size:12px;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.bio-modal-status{
+  display:inline-block;
+  font-family:'Inter',sans-serif;
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-weight:700;
+  padding:4px 9px;
+  border-radius:4px;
+}
+.bio-modal-status-done{
+  background:rgba(90,165,60,0.12);
+  color:#3d7a1f;
+}
+.bio-modal-status-waiting{
+  background:rgba(232,162,40,0.15);
+  color:#a86a0c;
+}
+.bio-modal-label{
+  font-family:'Inter',sans-serif;
+  font-size:9.5px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.bio-modal-body-text{
+  font-size:13.5px;
+  line-height:1.55;
+  color:var(--ink);
+}
+.bio-modal-tp-list{
+  list-style:none;
+  padding:0; margin:0;
+}
+.bio-modal-tp-list li{
+  font-size:13px;
+  line-height:1.55;
+  color:var(--ink);
+  padding:8px 0;
+  border-bottom:1px dashed var(--line-soft);
+  display:flex; gap:10px;
+}
+.bio-modal-tp-list li:last-child{ border-bottom:none; }
+.bio-modal-tp-num{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-weight:500;
+  color:var(--pdq-blue);
+  flex:0 0 auto;
+}
+.bio-modal-chips{
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.bio-modal-chip{
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  font-weight:500;
+  padding:4px 10px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:4px;
+  color:var(--ink);
+}
+.bio-modal-required-close{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:15px;
+  color:var(--pdq-blue);
+  padding:10px 14px;
+  background:rgba(0,105,180,0.06);
+  border-left:3px solid var(--pdq-blue);
+  border-radius:4px;
+}
+.bio-modal-coaching{
+  padding:12px 14px;
+  background:#fffbf3;
+  border-left:3px solid #e8a228;
+  border-radius:4px;
+  font-size:13px;
+}
+.bio-modal-secondary{
+  max-width:100%;
+  border-radius:8px;
+  border:1px solid var(--line);
+}
+.bio-modal-caption{
+  font-size:11px;
+  color:var(--ink-mute);
+  font-style:italic;
+  margin-top:6px;
+}
+.bio-modal-empty{
+  padding:24px;
+  text-align:center;
+  background:var(--paper);
+  border-radius:8px;
+}
+.bio-modal-empty strong{
+  display:block;
+  font-family:'Fraunces',serif;
+  font-size:16px;
+  margin-bottom:6px;
+}
+.bio-modal-empty p{
+  font-size:12.5px;
+  color:var(--ink-mute);
+  line-height:1.55;
+  margin:0;
+}
+.bio-modal-foot{
+  padding:14px 24px;
+  border-top:1px solid var(--line-soft);
+  display:flex; justify-content:flex-end;
+  background:#fafbfc;
+}
+
 /* ---------- Why This Works (Trusted Advisor Process) ---------- */
 .why-intro{
   background:linear-gradient(135deg, #f5f8fa 0%, #ffffff 100%);
@@ -2342,6 +2568,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
   }
   .user-info{ display:none; }   /* show only avatar on mobile to save space */
   .user-avatar{ width:32px; height:32px; font-size:11px; }
+  .app-version{ display:none; } /* hide version pill on mobile; visible on desktop sidebar */
 
   .main{ padding:20px 16px 60px; }
 
@@ -2423,7 +2650,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
   .admin-bulk-select{ flex:1 1 auto; width:100%; }
   .admin-bulk-row .btn{ width:100%; justify-content:center; }
   /* admin user table has many columns — let it scroll horizontally */
-  .admin-table{ min-width:680px; }
+  .admin-table{ min-width:780px; }
   .btn-sm{ padding:6px 10px; font-size:10px; letter-spacing:.08em; }
   /* admin add-employee row stacks on mobile */
   .admin-add-row{
@@ -2433,6 +2660,16 @@ html, body{ max-width:100%; overflow-x:hidden; }
   }
   .admin-add-input, .admin-add-select{ flex:1 1 auto; width:100%; }
   .admin-add-row .btn{ width:100%; justify-content:center; }
+
+  /* bio modal mobile tweaks */
+  .bio-modal-overlay{ padding:12px; }
+  .bio-modal{ max-height:94vh; }
+  .bio-modal-head{ padding:16px 48px 12px 18px; }
+  .bio-modal-h{ font-size:18px; }
+  .bio-modal-content{ padding:16px 18px; }
+  .bio-modal-foot{ padding:12px 18px; }
+  .bio-modal-photo{ width:60px; height:60px; }
+  .bio-modal-fullname{ font-size:16px; }
 
   /* streak nudge tighter on mobile */
   .streak-nudge{ padding:12px 14px; gap:10px; }
@@ -2615,6 +2852,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
+      <div class="app-version" id="appVersion">V.14</div>
     </div>
   </aside>
 
@@ -3431,30 +3669,6 @@ const BIOS = {
     mustSay: ['Operations Manager', 'pre-loss condition', 'standard', 'trust matters', 'comfortable working with'],
     requiredClose: 'comfortable working with',
     coachingTip: 'Your <strong>Operations Manager</strong> title carries weight — say it slowly and own it. The phrase <strong>&ldquo;standard, not a goal&rdquo;</strong> is one of the strongest lines in the whole deck; let it land. The <strong>grandfather detail</strong> previews slide 3\'s required phrase (&ldquo;treat each property like it was our own&rdquo;) — when you say &ldquo;every home I walk into, I think about as if it were my own kids\',&rdquo; you are setting that up. Your &ldquo;trust matters / we work to earn it&rdquo; line is your confident bridge — then fold the comfort question in immediately after. <strong>Do not skip the comfort question.</strong>'
-  },
-
-  'michael moughrabie': {
-    status: 'completed',
-    fullName: 'Michael Moughrabie',
-    title: 'Emergency Service Coordinator · PDQ Restoration',
-    photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg',
-    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-michael.jpg',
-    secondaryCaption: 'FDNY · Ladder 245, Coney Island',
-    title_line: "I'm Michael Moughrabie — Emergency Service Coordinator at PDQ Restoration.",
-    talkingPoints: [
-      "Open with name and title: <strong>Michael Moughrabie, Emergency Service Coordinator at PDQ Restoration</strong>.",
-      "Lead with the career identity, not a list: <strong>&ldquo;Before this work, I spent my career as a first responder.&rdquo;</strong>",
-      "Unpack the timeline: <strong>retired FDNY firefighter out of Coney Island, Brooklyn</strong> · <strong>NYPD officer in Crown Heights</strong> · <strong>EMT who responded to September 11th and the days that followed</strong>. Reference the FDNY photo.",
-      "Anchor the trust statement: <strong>&ldquo;I've been in your worst day before. Many times.&rdquo;</strong> Then pause.",
-      "Bridge to the work you do now: <strong>&ldquo;The difference between this work and the work I used to do is that this time, we get to put your home back together.&rdquo;</strong>",
-      "State the technical credentials: <strong>IICRC certified in Water Damage Restoration, Fire and Smoke Restoration, and Odor Control</strong>.",
-      "Promise on process: <strong>&ldquo;I'll walk you through both the restoration and the insurance process — start to finish.&rdquo;</strong>",
-      "Personal detail: <strong>Sparta, NJ · wife Kristin · daughters Kailyn and Ava · four dogs · softball, football, bowling</strong>.",
-      "<strong>REQUIRED CLOSE:</strong> ask, word-for-word: <strong>&ldquo;Am I someone you feel comfortable working with?&rdquo;</strong>"
-    ],
-    mustSay: ['Emergency Service Coordinator', 'FDNY', 'firefighter', 'IICRC', 'worst day', 'comfortable working with'],
-    requiredClose: 'comfortable working with',
-    coachingTip: 'Your first-responder history is the most powerful trust credential in the entire deck — <strong>do not rush past it</strong>. Open with the <em>identity</em> (&ldquo;career as a first responder&rdquo;), then unpack the timeline. The line <strong>&ldquo;I\'ve been in your worst day before. Many times.&rdquo;</strong> is the moment the homeowner exhales — say it and stop. Then the turn: <strong>&ldquo;This time, we get to put your home back together.&rdquo;</strong> The 9/11 reference is true and doesn\'t need adjectives — let the fact land on its own. Close with the comfort question.'
   }
 };
 
@@ -3462,6 +3676,7 @@ const BIOS = {
 const WAITING_REPS = [
   { name: 'Cheryl K.',     fullName: 'Cheryl Knox',         photo: TEAM_PHOTO_BASE + '47298-cheryl-knox.jpg' },
   { name: 'James B.',      fullName: 'James Bate',          photo: TEAM_PHOTO_BASE + '63076-james-bate.jpg' },
+  { name: 'Michael M.',    fullName: 'Michael Moughrabie',  photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg' },
   { name: 'Elizabeth B.',  fullName: 'Elizabeth Baresh',    photo: TEAM_PHOTO_BASE + '21177-elizabeth-baresh.jpg' },
   { name: 'Tim R.',        fullName: 'Tim Rozansky',        photo: TEAM_PHOTO_BASE + '74458-tim-rozansky.jpg' },
   { name: 'Tim Jr.',       fullName: 'Tim Rozansky Jr',     photo: TEAM_PHOTO_BASE + '59685-tim-rozansky-jr.jpg' }
@@ -5098,7 +5313,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin</div>
+        <div class="page-eyebrow">Admin · App V.14</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
@@ -5134,7 +5349,7 @@ async function renderAdmin(){
               <th style="width:80px">Reps</th>
               <th style="width:90px">Avg</th>
               <th style="width:120px">Last Active</th>
-              <th style="width:300px">Actions</th>
+              <th style="width:380px">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -5146,6 +5361,7 @@ async function renderAdmin(){
                 <td><span class="score-pill ${bandFor(t.avg).cls}">${t.avg||'—'}</span></td>
                 <td><span class="last-active ${t.lastActive==='today'?'today':''}">${t.lastActive}</span></td>
                 <td class="admin-actions-cell">
+                  <button class="btn btn-ghost btn-sm admin-bio-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}">View Bio</button>
                   <button class="btn btn-ghost btn-sm admin-edit-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}" data-user-role="${t.role.toLowerCase()==='manager'?'manager':'trainee'}">Edit</button>
                   <button class="btn btn-ghost btn-sm admin-reset-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}">Reset</button>
                   <button class="btn btn-warn btn-sm admin-delete-btn" data-user-id="${t.id}" data-user-name="${t.name.replace(/"/g,'&quot;')}">Delete</button>
@@ -5202,6 +5418,14 @@ async function renderAdmin(){
     if(e.key === 'Enter') document.getElementById('adminAddBtn').click();
   });
 
+  // Wire up View Bio buttons — opens a modal with the rep's bio data
+  document.querySelectorAll('.admin-bio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const userName = btn.dataset.userName;
+      openBioModal(userName);
+    });
+  });
+
   document.querySelectorAll('.admin-edit-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const userId = btn.dataset.userId;
@@ -5256,6 +5480,113 @@ async function renderAdmin(){
     if(error){ alert('Bulk delete failed: ' + error.message); return; }
     alert(`Deleted all attempts on slide "${slideTitle}".`);
     renderAdmin();
+  });
+}
+
+/* ---------- Bio Viewer Modal (Admin only) ---------- */
+function openBioModal(userName){
+  // Try to resolve the bio using the same logic the app uses for slide 2
+  const fakeUser = { name: userName };
+  const bio = findBioForUser(fakeUser);
+
+  // Strip <strong> and other HTML tags for clean reading display, but keep line breaks
+  const stripTags = (html) => String(html||'').replace(/<[^>]+>/g, '');
+
+  let body;
+  if(!bio){
+    body = `
+      <div class="bio-modal-section">
+        <div class="bio-modal-empty">
+          <strong>No bio found for "${userName}".</strong>
+          <p>This trainee&rsquo;s name doesn&rsquo;t match any entry in the BIOS table. They&rsquo;ll see the generic &ldquo;Waiting for Bio&rdquo; slide until one is added.</p>
+        </div>
+      </div>
+    `;
+  } else {
+    const isWaiting = bio.status === 'waiting';
+    const statusBadge = isWaiting
+      ? `<span class="bio-modal-status bio-modal-status-waiting">⏳ Waiting for Bio</span>`
+      : `<span class="bio-modal-status bio-modal-status-done">✓ Bio Complete</span>`;
+
+    const talkingPointsHtml = (bio.talkingPoints || []).map((tp, i) =>
+      `<li><span class="bio-modal-tp-num">${i+1}.</span> ${tp}</li>`
+    ).join('');
+
+    const mustSayHtml = (bio.mustSay || []).map(m =>
+      `<span class="bio-modal-chip">${stripTags(m)}</span>`
+    ).join('');
+
+    body = `
+      <div class="bio-modal-section bio-modal-header-row">
+        <div class="bio-modal-photo-wrap">
+          ${bio.photo ? `<img class="bio-modal-photo" src="${bio.photo}" alt="${stripTags(bio.fullName)}" onerror="this.style.display='none'">` : ''}
+        </div>
+        <div class="bio-modal-meta">
+          <div class="bio-modal-fullname">${stripTags(bio.fullName)}</div>
+          <div class="bio-modal-title">${stripTags(bio.title)}</div>
+          ${statusBadge}
+        </div>
+      </div>
+
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Opening line</div>
+        <div class="bio-modal-body-text">&ldquo;${stripTags(bio.title_line)}&rdquo;</div>
+      </div>
+
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Talking points</div>
+        <ol class="bio-modal-tp-list">${talkingPointsHtml}</ol>
+      </div>
+
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Must-say keywords</div>
+        <div class="bio-modal-chips">${mustSayHtml}</div>
+      </div>
+
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Required close</div>
+        <div class="bio-modal-required-close">&ldquo;${stripTags(bio.requiredClose)}&rdquo;</div>
+      </div>
+
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Coaching tip</div>
+        <div class="bio-modal-body-text bio-modal-coaching">${bio.coachingTip || '—'}</div>
+      </div>
+
+      ${bio.secondaryPhoto ? `
+      <div class="bio-modal-section">
+        <div class="bio-modal-label">Secondary photo</div>
+        <img class="bio-modal-secondary" src="${bio.secondaryPhoto}" alt="Personal photo" onerror="this.style.display='none'">
+        ${bio.secondaryCaption ? `<div class="bio-modal-caption">${stripTags(bio.secondaryCaption)}</div>` : ''}
+      </div>
+      ` : ''}
+    `;
+  }
+
+  // Build the modal element
+  const overlay = document.createElement('div');
+  overlay.className = 'bio-modal-overlay';
+  overlay.innerHTML = `
+    <div class="bio-modal" role="dialog" aria-modal="true" aria-label="Bio for ${userName}">
+      <div class="bio-modal-head">
+        <div class="bio-modal-eyebrow">Bio · Slide 2</div>
+        <h2 class="bio-modal-h">${userName}</h2>
+        <button class="bio-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="bio-modal-content">${body}</div>
+      <div class="bio-modal-foot">
+        <button class="btn btn-ghost bio-modal-close-btn">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeModal = () => overlay.remove();
+  overlay.querySelector('.bio-modal-close').addEventListener('click', closeModal);
+  overlay.querySelector('.bio-modal-close-btn').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function escClose(e){
+    if(e.key === 'Escape'){ closeModal(); document.removeEventListener('keydown', escClose); }
   });
 }
 
