@@ -1903,7 +1903,111 @@ body{
 .nudge-fire{ background:linear-gradient(135deg, #fff3eb 0%, #ffefe1 100%); border-color:#e87334; }
 .nudge-fire .streak-nudge-title{ color:#c8541a; }
 
-/* Bio-waiting nudge — appears on dashboard when rep has a pending bio */
+/* ============================
+   Image fallback — used when a slide image URL fails to load.
+   The <img> attempts to load; if it errors, an onerror handler adds
+   .has-failed-image to the parent and the fallback content takes over.
+   Until the error fires, the fallback is hidden.
+   ============================ */
+
+/* Hide the broken-image icon if loading fails */
+.slide-image-failed{
+  display:none !important;
+}
+
+/* === Module pane (full slide view) === */
+.slide-image-fallback{
+  display:none;
+  position:absolute;
+  inset:0;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:32px 28px;
+  background:linear-gradient(135deg, #f7f5ef 0%, #ecebe2 100%);
+  border:1px dashed #c8c4b8;
+  z-index:1;
+}
+.slide-image-frame.has-failed-image .slide-image-fallback{
+  display:flex;
+}
+.slide-image-fallback-num{
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  font-weight:800;
+  color:var(--pdq-blue);
+  background:#fff;
+  border:1px solid #d6d2c8;
+  border-radius:99px;
+  padding:5px 14px;
+  margin-bottom:18px;
+}
+.slide-image-fallback-title{
+  font-family:'Fraunces',serif;
+  font-weight:300;
+  font-size:24px;
+  line-height:1.2;
+  color:var(--ink);
+  margin-bottom:14px;
+  max-width:80%;
+}
+.slide-image-fallback-note{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:13px;
+  color:var(--ink-soft);
+  line-height:1.55;
+  max-width:90%;
+}
+@media (max-width: 720px){
+  .slide-image-fallback{ padding:24px 18px; }
+  .slide-image-fallback-title{ font-size:18px; }
+  .slide-image-fallback-note{ font-size:11px; }
+}
+
+/* === Slide card thumbnail (modules grid) === */
+.slide-card-thumb-fallback{
+  display:none;
+  position:absolute;
+  inset:0;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:12px 14px;
+  background:linear-gradient(135deg, #f7f5ef 0%, #ecebe2 100%);
+  border:1px dashed #c8c4b8;
+  z-index:1;
+}
+.slide-card-thumb.has-failed-image .slide-card-thumb-fallback{
+  display:flex;
+}
+.slide-card-thumb-fallback-num{
+  font-family:'Inter',sans-serif;
+  font-size:9px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  font-weight:800;
+  color:var(--pdq-blue);
+  background:#fff;
+  border:1px solid #d6d2c8;
+  border-radius:99px;
+  padding:3px 9px;
+  margin-bottom:8px;
+}
+.slide-card-thumb-fallback-title{
+  font-family:'Fraunces',serif;
+  font-weight:300;
+  font-size:14px;
+  line-height:1.2;
+  color:var(--ink);
+  max-width:90%;
+}
+
+
 .bio-waiting-nudge{
   display:flex;
   gap:14px;
@@ -3089,7 +3193,7 @@ const BIOS = {
     fullName: 'Ivan R.',
     title: 'Restoration Technician · PDQ Restoration',
     photo: TEAM_PHOTO_BASE + '6900-Ivan-R.-Headshot.JPG',
-    secondaryPhoto: 'PERSONAL_IVAN_ATV',
+    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-ivan.jpg',
     secondaryCaption: 'Outside of work — riding ATVs',
     title_line: "I'm Ivan, a Restoration Technician here at PDQ.",
     talkingPoints: [
@@ -3176,7 +3280,7 @@ const BIOS = {
     fullName: 'Leo Trinidad',
     title: 'Project Manager · PDQ Restoration',
     photo: TEAM_PHOTO_BASE + '19377-leo-trinidad.jpg',
-    secondaryPhoto: 'PERSONAL_LEO_FAMILY',
+    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-leo.jpg',
     secondaryCaption: 'My family',
     title_line: "I'm Leo Trinidad — Project Manager here at PDQ.",
     talkingPoints: [
@@ -3199,7 +3303,7 @@ const BIOS = {
     fullName: 'Lance Caffrey',
     title: 'Chief Operating Officer · PDQ Restoration',
     photo: TEAM_PHOTO_BASE + '31114-lance-caffrey.jpg',
-    secondaryPhoto: 'PERSONAL_LANCE_FAMILY',
+    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-lance.jpg',
     secondaryCaption: 'Family — DC trip',
     title_line: "I'm Lance Caffrey — Chief Operating Officer at PDQ Restoration.",
     talkingPoints: [
@@ -3222,7 +3326,7 @@ const BIOS = {
     fullName: 'Jade Alberta',
     title: 'Contents Supervisor · PDQ Restoration',
     photo: TEAM_PHOTO_BASE + '13100-Jade-Headshot.JPG',
-    secondaryPhoto: 'PERSONAL_JADE_SON',
+    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-jade.jpg',
     secondaryCaption: 'With my son',
     title_line: "I'm Jade Alberta — Contents Supervisor here at PDQ.",
     talkingPoints: [
@@ -3327,6 +3431,30 @@ const BIOS = {
     mustSay: ['Operations Manager', 'pre-loss condition', 'standard', 'trust matters', 'comfortable working with'],
     requiredClose: 'comfortable working with',
     coachingTip: 'Your <strong>Operations Manager</strong> title carries weight — say it slowly and own it. The phrase <strong>&ldquo;standard, not a goal&rdquo;</strong> is one of the strongest lines in the whole deck; let it land. The <strong>grandfather detail</strong> previews slide 3\'s required phrase (&ldquo;treat each property like it was our own&rdquo;) — when you say &ldquo;every home I walk into, I think about as if it were my own kids\',&rdquo; you are setting that up. Your &ldquo;trust matters / we work to earn it&rdquo; line is your confident bridge — then fold the comfort question in immediately after. <strong>Do not skip the comfort question.</strong>'
+  },
+
+  'michael moughrabie': {
+    status: 'completed',
+    fullName: 'Michael Moughrabie',
+    title: 'Emergency Service Coordinator · PDQ Restoration',
+    photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg',
+    secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-michael.jpg',
+    secondaryCaption: 'FDNY · Ladder 245, Coney Island',
+    title_line: "I'm Michael Moughrabie — Emergency Service Coordinator at PDQ Restoration.",
+    talkingPoints: [
+      "Open with name and title: <strong>Michael Moughrabie, Emergency Service Coordinator at PDQ Restoration</strong>.",
+      "Lead with the career identity, not a list: <strong>&ldquo;Before this work, I spent my career as a first responder.&rdquo;</strong>",
+      "Unpack the timeline: <strong>retired FDNY firefighter out of Coney Island, Brooklyn</strong> · <strong>NYPD officer in Crown Heights</strong> · <strong>EMT who responded to September 11th and the days that followed</strong>. Reference the FDNY photo.",
+      "Anchor the trust statement: <strong>&ldquo;I've been in your worst day before. Many times.&rdquo;</strong> Then pause.",
+      "Bridge to the work you do now: <strong>&ldquo;The difference between this work and the work I used to do is that this time, we get to put your home back together.&rdquo;</strong>",
+      "State the technical credentials: <strong>IICRC certified in Water Damage Restoration, Fire and Smoke Restoration, and Odor Control</strong>.",
+      "Promise on process: <strong>&ldquo;I'll walk you through both the restoration and the insurance process — start to finish.&rdquo;</strong>",
+      "Personal detail: <strong>Sparta, NJ · wife Kristin · daughters Kailyn and Ava · four dogs · softball, football, bowling</strong>.",
+      "<strong>REQUIRED CLOSE:</strong> ask, word-for-word: <strong>&ldquo;Am I someone you feel comfortable working with?&rdquo;</strong>"
+    ],
+    mustSay: ['Emergency Service Coordinator', 'FDNY', 'firefighter', 'IICRC', 'worst day', 'comfortable working with'],
+    requiredClose: 'comfortable working with',
+    coachingTip: 'Your first-responder history is the most powerful trust credential in the entire deck — <strong>do not rush past it</strong>. Open with the <em>identity</em> (&ldquo;career as a first responder&rdquo;), then unpack the timeline. The line <strong>&ldquo;I\'ve been in your worst day before. Many times.&rdquo;</strong> is the moment the homeowner exhales — say it and stop. Then the turn: <strong>&ldquo;This time, we get to put your home back together.&rdquo;</strong> The 9/11 reference is true and doesn\'t need adjectives — let the fact land on its own. Close with the comfort question.'
   }
 };
 
@@ -3334,7 +3462,6 @@ const BIOS = {
 const WAITING_REPS = [
   { name: 'Cheryl K.',     fullName: 'Cheryl Knox',         photo: TEAM_PHOTO_BASE + '47298-cheryl-knox.jpg' },
   { name: 'James B.',      fullName: 'James Bate',          photo: TEAM_PHOTO_BASE + '63076-james-bate.jpg' },
-  { name: 'Michael M.',    fullName: 'Michael Moughrabie',  photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg' },
   { name: 'Elizabeth B.',  fullName: 'Elizabeth Baresh',    photo: TEAM_PHOTO_BASE + '21177-elizabeth-baresh.jpg' },
   { name: 'Tim R.',        fullName: 'Tim Rozansky',        photo: TEAM_PHOTO_BASE + '74458-tim-rozansky.jpg' },
   { name: 'Tim Jr.',       fullName: 'Tim Rozansky Jr',     photo: TEAM_PHOTO_BASE + '59685-tim-rozansky-jr.jpg' }
@@ -4053,7 +4180,11 @@ function slideCardHTML(raw){
   return `
     <div class="slide-card" data-slide-id="${s.id}">
       <div class="slide-card-thumb">
-        <img src="${s.image}" alt="" loading="lazy" />
+        <img src="${s.image}" alt="" loading="lazy" onerror="this.classList.add('slide-image-failed'); this.parentNode.classList.add('has-failed-image');" />
+        <div class="slide-card-thumb-fallback" aria-hidden="true">
+          <div class="slide-card-thumb-fallback-num">${s.num}</div>
+          <div class="slide-card-thumb-fallback-title">${s.title.replace(/<[^>]+>/g,'')}</div>
+        </div>
         <div class="slide-card-thumb-num">${s.num}</div>
         <div class="slide-card-thumb-status ${status}">${word}</div>
         ${waitingBadge}
@@ -4154,7 +4285,12 @@ function renderModule(){
     <div class="module">
       <div class="module-pane">
         <figure class="slide-image-frame ${slide.bioStatus === 'waiting' ? 'is-waiting' : ''}">
-          <img src="${slide.image}" alt="Slide ${slide.num} — ${slide.title.replace(/<[^>]+>/g,'')}" class="slide-image" />
+          <img src="${slide.image}" alt="Slide ${slide.num} — ${slide.title.replace(/<[^>]+>/g,'')}" class="slide-image" onerror="this.classList.add('slide-image-failed'); this.parentNode.classList.add('has-failed-image');" />
+          <div class="slide-image-fallback" aria-hidden="true">
+            <div class="slide-image-fallback-num">Slide ${slide.num}</div>
+            <div class="slide-image-fallback-title">${slide.title.replace(/<[^>]+>/g,'')}</div>
+            <div class="slide-image-fallback-note">Slide image temporarily unavailable.<br>Practice from the talking points below.</div>
+          </div>
           ${slide.secondaryPhoto ? `
           <div class="slide-image-secondary" title="${slide.secondaryCaption || ''}">
             <img src="${slide.secondaryPhoto}" alt="${slide.secondaryCaption || 'Personal photo'}" />
