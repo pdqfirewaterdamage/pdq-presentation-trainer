@@ -1739,101 +1739,132 @@ body{
 }
 
 /* ============================
-   Bio Modal — Slide 2 Preview
-   Renders the actual meet-pm.jpg slide image with the rep's headshot
-   overlaid and an optional small connection photo. Mirrors the layout
-   the trainee sees in Slide 2 so all bios feel consistent.
+   COMPOSED BIO SLIDE — matches the Chris Baresh reference layout.
+   Used BOTH in trainee Slide 2 view AND in the admin bio modal,
+   so what the manager previews is exactly what the rep delivers.
+
+   Variant classes:
+   - .composed-bio-slide-module   → in the Slide Modules page (wider)
+   - .composed-bio-slide-modal    → in the admin View Bio modal (narrower)
    ============================ */
-.bio-modal-slide-preview{
-  margin-bottom:22px;
+.composed-bio-slide{
+  position:relative;
+  background:#fff;
   border:1px solid var(--line);
   border-radius:10px;
   overflow:hidden;
-  background:#fff;
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow-md);
+  font-family:'Inter', sans-serif;
+  color:var(--ink);
+  /* 11 x 8.5 letterbox is too tight for legibility on phones; allow taller */
+  min-height:auto;
 }
-.bio-slide-frame{
-  position:relative;
-  width:100%;
-  background:#f4f5f7;
-  /* The actual slide is 11x8.5 landscape — letterbox naturally */
-  aspect-ratio: 11 / 8.5;
-  overflow:hidden;
+.composed-bio-slide-module{
+  margin:0 0 22px;
 }
-.bio-slide-base{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  background:#fff;
+.composed-bio-slide-modal{
+  margin:6px 0 0;
 }
-.bio-slide-base.failed{
-  opacity:0;
-}
-/* Primary headshot: large round overlay positioned over the "Meet Your PM" area */
-.bio-slide-headshot{
+
+/* Decorative top/bottom green-to-blue swooshes */
+.composed-bio-swoosh{
   position:absolute;
-  top:18%;
-  left:8%;
-  width:24%;
-  aspect-ratio:1 / 1;
-  border-radius:50%;
-  border:5px solid #fff;
-  box-shadow: 0 8px 22px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.05);
-  overflow:hidden;
-  background:#fff;
+  left:0; right:0;
+  height:14px;
+  z-index:1;
+  background:
+    linear-gradient(90deg,
+      var(--pdq-green) 0%,
+      var(--pdq-green) 38%,
+      transparent 50%),
+    linear-gradient(90deg,
+      transparent 45%,
+      var(--pdq-blue) 60%,
+      var(--pdq-blue) 100%);
+  background-size: 100% 6px, 100% 6px;
+  background-position: 0 2px, 0 8px;
+  background-repeat: no-repeat;
+}
+.composed-bio-swoosh-top{ top:0; }
+.composed-bio-swoosh-bottom{ bottom:0; }
+
+/* PDQ Logo top right */
+.composed-bio-logo{
+  position:absolute;
+  top:14px; right:18px;
+  display:flex;
+  align-items:center;
+  gap:6px;
   z-index:2;
 }
-.bio-slide-headshot img{
-  display:block;
-  width:100%; height:100%;
-  object-fit:cover;
+.composed-bio-logo-mark{
+  width:26px; height:26px;
+  border-radius:4px;
+  background:
+    radial-gradient(circle at 30% 30%, var(--pdq-green) 0%, var(--pdq-green) 40%, transparent 42%),
+    linear-gradient(135deg, var(--pdq-blue-deep), var(--pdq-blue));
+  border:1.5px solid var(--pdq-blue-deep);
+  position:relative;
 }
-/* Secondary connection photo: smaller, positioned bottom-right.
-   Intentionally small — it's a personal touch, not a portrait. */
-.bio-slide-secondary{
+.composed-bio-logo-mark::after{
+  content:'';
   position:absolute;
-  bottom:6%;
-  right:5%;
-  width:14%;
-  aspect-ratio:1 / 1;
-  border-radius:50%;
-  border:3px solid #fff;
-  box-shadow: 0 6px 16px rgba(0,0,0,.20), 0 0 0 1px rgba(0,0,0,.05);
-  overflow:hidden;
+  inset:6px;
   background:#fff;
-  z-index:3;
+  clip-path: polygon(50% 0, 100% 35%, 100% 100%, 0 100%, 0 35%);
 }
-.bio-slide-secondary img{
-  display:block;
-  width:100%; height:100%;
-  object-fit:cover;
-}
-.bio-slide-secondary-caption{
-  position:absolute;
-  bottom:-22px;
-  left:50%;
-  transform:translateX(-50%);
-  white-space:nowrap;
+.composed-bio-logo-text{
   font-family:'Inter',sans-serif;
-  font-size:8.5px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  font-weight:700;
+  font-size:7.5px;
+  line-height:1;
+  letter-spacing:.08em;
   color:var(--pdq-blue-deep);
-  background:#fff;
-  border:1px solid var(--line);
-  padding:2px 8px;
-  border-radius:99px;
-  display:none; /* off by default — keep the look clean */
 }
-/* Waiting overlay */
-.bio-modal-slide-preview.is-waiting .bio-slide-base{
-  filter: grayscale(.2) brightness(.92);
+.composed-bio-logo-text strong{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.04em;
+  color:var(--pdq-blue-deep);
 }
-.bio-slide-waiting-banner{
-  position:absolute;
-  top:0; left:0; right:0;
+.composed-bio-logo-text span{
+  font-size:6px;
+  font-weight:700;
+  letter-spacing:.18em;
+  color:var(--pdq-green-deep);
+}
+
+/* Header */
+.composed-bio-header{
+  position:relative;
+  z-index:2;
+  padding:34px 28px 8px;
+}
+.composed-bio-eyebrow{
+  font-family:'Inter', sans-serif;
+  font-size:10px;
+  letter-spacing:.32em;
+  font-weight:700;
+  color:var(--pdq-blue);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.composed-bio-h{
+  font-family:'Fraunces', serif;
+  font-weight:400;
+  font-size:34px;
+  line-height:1.1;
+  color:var(--ink);
+  letter-spacing:-.02em;
+  margin:0;
+}
+.composed-bio-h .bio-accent{
+  color:var(--pdq-blue);
+  font-weight:600;
+}
+
+/* Waiting banner (only when bio.status === 'waiting') */
+.composed-bio-waiting-banner{
+  margin:10px 28px 0;
   background:linear-gradient(90deg, rgba(232,162,40,.95), rgba(216,128,18,.95));
   color:#fff;
   font-family:'Inter',sans-serif;
@@ -1842,35 +1873,261 @@ body{
   letter-spacing:.22em;
   text-align:center;
   padding:6px 8px;
-  z-index:4;
+  border-radius:4px;
+  z-index:2;
+  position:relative;
 }
-.bio-slide-waiting-banner span{ margin-right:4px; }
+.composed-bio-waiting-banner span{ margin-right:4px; }
+.composed-bio-slide.is-waiting .composed-bio-portrait-img{
+  filter: grayscale(.2) brightness(.92);
+}
 
-.bio-slide-caption{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:9px 14px;
-  background:linear-gradient(90deg, var(--pdq-blue-pale) 0%, var(--paper) 100%);
-  border-top:1px solid var(--line-soft);
-  font-family:'Fraunces',serif;
-  font-style:italic;
-  font-size:11.5px;
-  color:var(--ink-soft);
+/* Body: portrait card + content side-by-side */
+.composed-bio-body{
+  display:grid;
+  grid-template-columns: 38% 1fr;
+  gap:22px;
+  padding:16px 28px 30px;
+  position:relative;
+  z-index:2;
 }
-.bio-slide-caption-num{
-  font-family:'Inter',sans-serif;
-  font-style:normal;
-  font-size:9px;
-  letter-spacing:.26em;
+
+/* Portrait card with brick-frame look — handled with subtle border + corner brackets */
+.composed-bio-portrait{
+  display:flex;
+  align-items:flex-start;
+}
+.composed-bio-portrait-frame{
+  position:relative;
+  width:100%;
+  background:linear-gradient(180deg, #d4a878 0%, #c79466 100%);
+  /* The portrait card from the reference — tall portrait aspect, name banner overlay at bottom */
+  aspect-ratio: 3 / 4;
+  border-radius:4px;
+  overflow:hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,.10);
+}
+/* Corner brackets — the green/blue corner accents from the reference */
+.composed-bio-corner{
+  position:absolute;
+  width:18px; height:18px;
+  z-index:2;
+}
+.composed-bio-corner-tl{
+  top:-2px; left:-2px;
+  border-top:3px solid var(--pdq-green);
+  border-left:3px solid var(--pdq-green);
+}
+.composed-bio-corner-br{
+  bottom:-2px; right:-2px;
+  border-bottom:3px solid var(--pdq-blue);
+  border-right:3px solid var(--pdq-blue);
+}
+.composed-bio-portrait-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.composed-bio-portrait-nameplate{
+  position:absolute;
+  bottom:0; left:0; right:0;
+  padding:14px 14px 18px;
+  background:linear-gradient(180deg, rgba(20,30,50,0) 0%, rgba(20,30,50,.7) 50%, rgba(20,30,50,.92) 100%);
+  text-align:center;
+  z-index:2;
+}
+.composed-bio-portrait-name{
+  font-family:'Fraunces', serif;
+  font-style:italic;
+  font-weight:500;
+  font-size:24px;
+  color:#fff;
+  line-height:1.1;
+  margin-bottom:4px;
+  letter-spacing:.005em;
+  text-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+.composed-bio-portrait-role{
+  font-family:'Inter', sans-serif;
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.22em;
+  color:var(--pdq-green);
   text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+
+/* Right-side content */
+.composed-bio-content{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.composed-bio-bullets-eyebrow{
+  font-family:'Inter', sans-serif;
+  font-size:10px;
   font-weight:800;
-  color:var(--pdq-blue-deep);
-  padding:3px 9px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:99px;
+  letter-spacing:.20em;
+  color:var(--ink);
+  text-transform:uppercase;
+  margin-bottom:2px;
+}
+.composed-bio-bullets{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.composed-bio-bullets li{
+  font-size:12px;
+  line-height:1.45;
+  color:var(--ink);
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+.composed-bio-bullet-arrow{
+  color:var(--pdq-blue);
+  font-weight:700;
+  font-size:14px;
+  line-height:1.2;
   flex-shrink:0;
+}
+.composed-bio-bullet-text{ flex:1; }
+
+/* Two boxes: "What You Can Expect" + "About Me" */
+.composed-bio-boxes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  background:var(--paper);
+  border-radius:6px;
+  padding:12px 14px;
+  border-left:3px solid var(--pdq-blue);
+  margin-top:4px;
+}
+.composed-bio-box{
+  position:relative;
+}
+.composed-bio-box-aboutme{
+  border-left:1px solid var(--line-soft);
+  padding-left:14px;
+}
+.composed-bio-box-title{
+  font-family:'Inter', sans-serif;
+  font-size:8.5px;
+  letter-spacing:.24em;
+  font-weight:800;
+  color:var(--ink);
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.composed-bio-box-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.composed-bio-box-list li{
+  font-family:'Fraunces', serif;
+  font-style:italic;
+  font-size:11px;
+  color:var(--ink);
+  display:flex;
+  gap:6px;
+  align-items:baseline;
+  line-height:1.35;
+}
+.composed-bio-box-check{
+  color:var(--pdq-blue);
+  font-style:normal;
+  font-weight:700;
+  flex-shrink:0;
+}
+.composed-bio-box-bullet{
+  color:var(--pdq-green-deep);
+  font-style:normal;
+  flex-shrink:0;
+  font-size:10px;
+}
+
+/* About-Me personal photo — small circle, top-right of the box */
+.composed-bio-aboutme-photo{
+  position:absolute;
+  top:-4px; right:-4px;
+  width:44px; height:44px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2.5px solid #fff;
+  box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06);
+  background:#fff;
+  z-index:3;
+}
+.composed-bio-aboutme-photo img{
+  display:block;
+  width:100%; height:100%;
+  object-fit:cover;
+}
+
+/* The close pill — blue gradient with the required question */
+.composed-bio-close-pill{
+  margin-top:6px;
+  background:linear-gradient(180deg, var(--pdq-blue) 0%, var(--pdq-blue-deep) 100%);
+  border:1px solid var(--pdq-blue-deep);
+  border-radius:8px;
+  padding:10px 18px;
+  text-align:center;
+  box-shadow: 0 4px 10px rgba(0,75,150,.22);
+  position:relative;
+}
+.composed-bio-close-pill span{
+  font-family:'Fraunces', serif;
+  font-style:italic;
+  font-size:14px;
+  font-weight:500;
+  color:#fff;
+}
+.composed-bio-close-pill span em{
+  font-style:italic;
+  color:var(--pdq-green);
+  font-weight:600;
+}
+
+/* Empty state (no bio) */
+.composed-bio-empty{
+  padding:40px 28px;
+  text-align:center;
+}
+.composed-bio-empty-title{
+  font-family:'Fraunces', serif;
+  font-size:18px;
+  color:var(--ink);
+  margin-bottom:6px;
+}
+.composed-bio-empty-sub{
+  font-size:12.5px;
+  color:var(--ink-mute);
+}
+
+/* Modal context tweaks — slightly smaller everything to fit modal width */
+.composed-bio-slide-modal .composed-bio-header{ padding:30px 22px 6px; }
+.composed-bio-slide-modal .composed-bio-h{ font-size:26px; }
+.composed-bio-slide-modal .composed-bio-eyebrow{ font-size:9px; }
+.composed-bio-slide-modal .composed-bio-body{ padding:14px 22px 26px; gap:18px; grid-template-columns:36% 1fr; }
+.composed-bio-slide-modal .composed-bio-portrait-name{ font-size:19px; }
+.composed-bio-slide-modal .composed-bio-portrait-role{ font-size:7.5px; }
+.composed-bio-slide-modal .composed-bio-bullets li{ font-size:11.5px; }
+.composed-bio-slide-modal .composed-bio-box-list li{ font-size:10.5px; }
+.composed-bio-slide-modal .composed-bio-close-pill span{ font-size:13px; }
+
+/* Wrapper label for modal slide preview */
+.bio-modal-slide-preview-wrap{
+  margin-bottom:22px;
 }
 
 .bio-modal-label{
@@ -2788,12 +3045,27 @@ html, body{ max-width:100%; overflow-x:hidden; }
   .bio-modal-content{ padding:16px 18px; }
   .bio-modal-foot{ padding:12px 18px; }
   .bio-modal-fullname{ font-size:16px; }
-  /* Slide preview adapts: keep the same proportions, just smaller */
-  .bio-slide-headshot{ border-width:3px; }
-  .bio-slide-secondary{ border-width:2px; }
-  .bio-slide-waiting-banner{ font-size:9px; letter-spacing:.18em; padding:5px 6px; }
-  .bio-slide-caption{ font-size:10.5px; padding:7px 11px; }
-  .bio-slide-caption-num{ font-size:8.5px; padding:2px 7px; }
+
+  /* Composed bio slide on mobile — stack portrait above content */
+  .composed-bio-header{ padding:28px 18px 6px; }
+  .composed-bio-h{ font-size:24px; }
+  .composed-bio-eyebrow{ font-size:9px; letter-spacing:.24em; }
+  .composed-bio-body{
+    grid-template-columns:1fr;
+    padding:14px 18px 24px;
+    gap:18px;
+  }
+  .composed-bio-portrait{ max-width:280px; margin:0 auto; }
+  .composed-bio-portrait-name{ font-size:20px; }
+  .composed-bio-portrait-role{ font-size:7.5px; }
+  .composed-bio-boxes{ grid-template-columns:1fr; gap:14px; }
+  .composed-bio-box-aboutme{ border-left:none; padding-left:0; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .composed-bio-aboutme-photo{ width:40px; height:40px; }
+  .composed-bio-close-pill span{ font-size:13px; }
+  .composed-bio-logo{ top:10px; right:12px; }
+  .composed-bio-logo-mark{ width:22px; height:22px; }
+  .composed-bio-logo-text strong{ font-size:10px; }
+  .composed-bio-logo-text span{ font-size:5.5px; }
 
   /* streak nudge tighter on mobile */
   .streak-nudge{ padding:12px 14px; gap:10px; }
@@ -2976,7 +3248,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.14</div>
+      <div class="app-version" id="appVersion">V.15</div>
     </div>
   </aside>
 
@@ -3885,6 +4157,253 @@ function findBioForUser(user){
   return null;
 }
 
+/* =====================================================================
+   BIO SLIDE DERIVATION & COMPOSITION
+   Given a bio object, derive the right-side content blocks
+   (bullets, "What You Can Expect", "About Me") from existing
+   talkingPoints + mustSay. Then compose the full slide as HTML
+   matching the Chris Baresh reference layout.
+   ===================================================================== */
+
+/* Strip a talking point of its meta-instruction prefix (e.g. "Open with…",
+   "Frame your tenure…", "State your credential…") and return the first
+   meaningful <strong> phrase or, if there's none, the trailing clause. */
+function deriveBulletFromTalkingPoint(tp){
+  if(!tp) return '';
+  // Strip leading meta-instruction prefix like "Open with X:", "State the Y:"
+  let s = String(tp);
+  // Skip pure meta points (REQUIRED CLOSE, etc.)
+  if(/REQUIRED CLOSE/i.test(s)) return null;
+  if(/^Personal detail/i.test(s)) return null;
+  if(/^Walk the (&ldquo;)?What You Can Expect/i.test(s)) return null;
+  // If line starts with an instruction like "Open with X: Y", keep Y
+  s = s.replace(/^(Open with[^:]*|Frame [^:]+|State [^:]+|Anchor [^:]+|Walk [^:]+|Lead with [^:]+|Drop [^:]+|Add|Use [^:]+|Pivot [^:]+|Promise [^:]+|Acknowledge [^:]+|Reframe [^:]+|Confident close[^:]+):\s*/i, '');
+  // Some lines just are descriptive ("Several years of experience.")
+  return s.trim();
+}
+
+/* Extract personal-detail content from a bio's talkingPoints — the line that
+   starts with "Personal detail:". Returns array of short snippets. */
+function deriveAboutMeItems(bio){
+  if(!bio || !bio.talkingPoints) return [];
+  const personalTp = bio.talkingPoints.find(tp => /^Personal detail/i.test(tp));
+  if(!personalTp) return [];
+  // Grab the content of the first <strong>...</strong> in that line
+  const m = personalTp.match(/<strong>([^<]+)<\/strong>/);
+  if(!m) return [];
+  let content = m[1]
+    .replace(/&ldquo;|&rdquo;|&mdash;|&hellip;/g, m => ({'&ldquo;':'"','&rdquo;':'"','&mdash;':'—','&hellip;':'…'}[m]))
+    .replace(/&[a-z]+;/g, ' ')
+    .trim();
+  // Split on commas and "and", but NOT inside parentheses.
+  // First protect parenthetical content by replacing inner commas AND "and" with placeholders.
+  const protectedContent = content.replace(/\(([^)]*)\)/g, (m, inner) =>
+    '(' + inner.replace(/,/g, '\u0001').replace(/\s+and\s+/gi, '\u0002') + ')'
+  );
+  const parts = protectedContent
+    .split(/,\s*|\s+and\s+/i)
+    .map(s => s.trim().replace(/\u0001/g, ',').replace(/\u0002/g, ' and '))
+    .filter(s => s.length > 0 && s.length < 80);
+  return parts.slice(0, 4);
+}
+
+/* Extract the "What You Can Expect" content from the talking point that
+   specifically mentions it. Falls back to deliverable-sounding mustSay items. */
+function deriveExpectItems(bio){
+  if(!bio || !bio.talkingPoints) return [];
+  const expectTp = bio.talkingPoints.find(tp => /What You Can Expect/i.test(tp));
+  if(expectTp){
+    const m = expectTp.match(/<strong>([^<]+)<\/strong>/);
+    if(m){
+      let content = m[1].replace(/&ldquo;|&rdquo;/g, '"').trim();
+      const parts = content.split(/,\s*|\s+and\s+/i).map(s => s.trim()).filter(s => s.length > 0 && s.length < 60);
+      if(parts.length >= 2) return parts.slice(0, 3);
+    }
+  }
+  // Fallback: derive from talking points that mention deliverables
+  const deliverables = [];
+  bio.talkingPoints.forEach(tp => {
+    if(/clear communication|consistent.*results|dependable support|calm.*voice|clear updates|first phone call/i.test(tp)){
+      const m = tp.match(/<strong>([^<]+)<\/strong>/);
+      if(m){
+        let content = m[1].replace(/&ldquo;|&rdquo;/g, '"').trim();
+        content.split(/,\s*|\s+and\s+/i).forEach(p => {
+          const trimmed = p.trim();
+          if(trimmed.length > 5 && trimmed.length < 50 && !deliverables.includes(trimmed)) deliverables.push(trimmed);
+        });
+      }
+    }
+  });
+  if(deliverables.length >= 2) return deliverables.slice(0, 3);
+  // Final fallback — generic items every PDQ rep can promise
+  return ['Clear communication, start to finish', 'Consistent, high-quality results', 'Dependable support through every step'];
+}
+
+/* Extract the substantive bullet points (the meat) from the bio's talking
+   points. Skips meta-instruction lines (Open with, REQUIRED CLOSE, Personal
+   detail, What You Can Expect, etc.) and returns 4-6 clean bullets. */
+function deriveBullets(bio){
+  if(!bio || !bio.talkingPoints) return [];
+  const bullets = [];
+  bio.talkingPoints.forEach(tp => {
+    // Skip personal-detail and expect (those go to their own boxes)
+    if(/^Personal detail/i.test(tp)) return;
+    if(/What You Can Expect/i.test(tp)) return;
+    if(/REQUIRED CLOSE/i.test(tp)) return;
+    // For the rest, pull the first <strong> content as the bullet
+    const m = tp.match(/<strong>([^<]+)<\/strong>/);
+    if(m){
+      let content = m[1].trim();
+      // Strip surrounding quotes
+      content = content.replace(/^&ldquo;|&rdquo;$/g, '').replace(/^&ldquo;/,'').replace(/&rdquo;$/,'');
+      content = content.replace(/^["']|["']$/g, '');
+      if(content.length > 4 && content.length < 200){
+        bullets.push(content);
+      }
+    } else {
+      // No strong tag — use whole line stripped
+      const cleaned = deriveBulletFromTalkingPoint(tp);
+      if(cleaned && cleaned.length < 200) bullets.push(cleaned.replace(/<[^>]+>/g,''));
+    }
+  });
+  return bullets.slice(0, 6);
+}
+
+/* Derive the short, capitalized role label shown under the rep's name in the
+   portrait card. Trims " · PDQ Restoration" since that's redundant. */
+function deriveRoleLabel(bio){
+  if(!bio || !bio.title) return 'PDQ RESTORATION';
+  // For waiting bios where title is just "PDQ Restoration" — show only that
+  if(/^PDQ Restoration\s*$/i.test(bio.title)) return 'PDQ RESTORATION';
+  return bio.title
+    .replace(/\s*·\s*PDQ Restoration\s*$/i, '')
+    .replace(/\s*\|\s*PDQ Restoration\s*$/i, '')
+    .toUpperCase() + ' · PDQ RESTORATION';
+}
+
+/* Derive the eyebrow label above the bullets (e.g. "LEAD PROJECT MANAGER · PDQ RESTORATION") */
+function deriveBulletsEyebrow(bio){
+  if(!bio || !bio.title) return 'PDQ RESTORATION';
+  // Same as role label — uppercase title
+  return deriveRoleLabel(bio);
+}
+
+/* Compose the full bio slide HTML — the Chris Baresh reference layout —
+   for a given bio object. Used by both Slide 2 rendering and the admin
+   bio modal. slideContext='module' uses module-sized layout; 'modal' uses
+   modal-sized layout. */
+function composeBioSlideHTML(bio, opts){
+  opts = opts || {};
+  const context = opts.context || 'module';   // 'module' or 'modal'
+  const isWaiting = bio && bio.status === 'waiting';
+
+  // Resolve secondary photo
+  let resolvedSecondary = null;
+  let resolvedSecondaryCaption = null;
+  if(bio && bio.secondaryPhoto){
+    if(typeof bio.secondaryPhoto === 'string' && bio.secondaryPhoto.startsWith('PERSONAL_')){
+      resolvedSecondary = PERSONAL_PHOTOS[bio.secondaryPhoto] || null;
+    } else {
+      resolvedSecondary = bio.secondaryPhoto;
+    }
+    resolvedSecondaryCaption = bio.secondaryCaption || null;
+  }
+
+  if(!bio){
+    return `
+      <div class="composed-bio-slide composed-bio-slide-${context} is-no-bio">
+        <div class="composed-bio-empty">
+          <div class="composed-bio-empty-title">No bio configured</div>
+          <div class="composed-bio-empty-sub">This rep needs a bio entry. The slide will fall back to the generic template until one is added.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const bullets = deriveBullets(bio);
+  const expect = deriveExpectItems(bio);
+  const aboutMe = deriveAboutMeItems(bio);
+  const roleLabel = deriveRoleLabel(bio);
+  const bulletsEyebrow = deriveBulletsEyebrow(bio);
+
+  // Build the close pill text from requiredClose ("comfortable working with")
+  // We know the canonical full question is "Am I someone you feel comfortable working with?"
+  const closeText = `Am I someone you feel <em>comfortable</em> working with?`;
+
+  return `
+    <div class="composed-bio-slide composed-bio-slide-${context} ${isWaiting ? 'is-waiting' : ''}">
+      <!-- Top decorative swoosh -->
+      <div class="composed-bio-swoosh composed-bio-swoosh-top"></div>
+
+      <!-- PDQ logo top right -->
+      <div class="composed-bio-logo">
+        <div class="composed-bio-logo-mark"></div>
+        <div class="composed-bio-logo-text"><strong>PDQ</strong><br><span>RESTORATION</span></div>
+      </div>
+
+      <!-- Header -->
+      <div class="composed-bio-header">
+        <div class="composed-bio-eyebrow">FIRST THING YOU SHOULD KNOW</div>
+        <h2 class="composed-bio-h">I&rsquo;m here to <span class="bio-accent">help you</span>. Not sell you.</h2>
+      </div>
+
+      ${isWaiting ? `<div class="composed-bio-waiting-banner"><span>⏳</span> BIO PENDING — TEXT TIM YOUR INFO</div>` : ''}
+
+      <!-- Body: portrait card + content -->
+      <div class="composed-bio-body">
+
+        <!-- Left: portrait card -->
+        <div class="composed-bio-portrait">
+          <div class="composed-bio-portrait-frame">
+            <div class="composed-bio-corner composed-bio-corner-tl"></div>
+            <div class="composed-bio-corner composed-bio-corner-br"></div>
+            <img class="composed-bio-portrait-img" src="${bio.photo}" alt="${(bio.fullName||'').replace(/"/g,'&quot;')}" onerror="this.style.opacity=0" />
+            <div class="composed-bio-portrait-nameplate">
+              <div class="composed-bio-portrait-name">${bio.fullName || ''}</div>
+              <div class="composed-bio-portrait-role">${roleLabel}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: content -->
+        <div class="composed-bio-content">
+          <div class="composed-bio-bullets-eyebrow">${bulletsEyebrow}</div>
+          <ul class="composed-bio-bullets">
+            ${bullets.map(b => `<li><span class="composed-bio-bullet-arrow">›</span> <span class="composed-bio-bullet-text">${b}</span></li>`).join('')}
+          </ul>
+
+          <div class="composed-bio-boxes">
+            <div class="composed-bio-box">
+              <div class="composed-bio-box-title">WHAT YOU CAN EXPECT</div>
+              <ul class="composed-bio-box-list">
+                ${expect.map(e => `<li><span class="composed-bio-box-check">✓</span> ${e}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="composed-bio-box composed-bio-box-aboutme">
+              <div class="composed-bio-box-title">ABOUT ME</div>
+              ${resolvedSecondary ? `
+                <div class="composed-bio-aboutme-photo" title="${(resolvedSecondaryCaption||'').replace(/"/g,'&quot;')}">
+                  <img src="${resolvedSecondary}" alt="${(resolvedSecondaryCaption||'Personal photo').replace(/"/g,'&quot;')}" onerror="this.parentNode.style.display='none'" />
+                </div>
+              ` : ''}
+              <ul class="composed-bio-box-list">
+                ${aboutMe.map(a => `<li><span class="composed-bio-box-bullet">♡</span> ${a}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <div class="composed-bio-close-pill">
+            <span>${closeText}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom decorative swoosh -->
+      <div class="composed-bio-swoosh composed-bio-swoosh-bottom"></div>
+    </div>
+  `;
+}
+
 /* Given the raw slide object and the current user, return a personalized
    copy when the slide is the bio slide. Otherwise return the slide unchanged. */
 function personalizeSlide(slide){
@@ -3912,6 +4431,7 @@ function personalizeSlide(slide){
     bioStatus: bio.status,                // 'completed' or 'waiting'
     bioFullName: bio.fullName,
     bioTitle: bio.title,
+    bio: bio,                              // full bio object — for composed slide rendering
     talkingPoints: bio.talkingPoints || slide.talkingPoints,
     mustSay: bio.mustSay || slide.mustSay,
     requiredClose: bio.requiredClose || slide.requiredClose,
@@ -4623,6 +5143,7 @@ function renderModule(){
 
     <div class="module">
       <div class="module-pane">
+        ${slide.id === 'meet-pm' && slide.bio ? composeBioSlideHTML(slide.bio, {context:'module'}) : `
         <figure class="slide-image-frame ${slide.bioStatus === 'waiting' ? 'is-waiting' : ''}">
           <img src="${slide.image}" alt="Slide ${slide.num} — ${slide.title.replace(/<[^>]+>/g,'')}" class="slide-image" onerror="this.classList.add('slide-image-failed'); this.parentNode.classList.add('has-failed-image');" />
           <div class="slide-image-fallback" aria-hidden="true">
@@ -4651,6 +5172,7 @@ function renderModule(){
                 : `The actual page in your tabletop deck`}
           </figcaption>
         </figure>
+        `}
 
         <h3>Talking <em>points</em></h3>
         <ul class="tp-list">
@@ -5437,7 +5959,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.14</div>
+        <div class="page-eyebrow">Admin · App V.15</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
@@ -5613,24 +6135,8 @@ function openBioModal(userName){
   const fakeUser = { name: userName };
   const bio = findBioForUser(fakeUser);
 
-  // The actual slide 2 base image from Supabase storage
-  const meetPmSlide = SLIDES.find(s => s.id === 'meet-pm');
-  const baseSlideImage = meetPmSlide ? meetPmSlide.image : '';
-
   // Strip <strong> and other HTML tags for clean reading display
   const stripTags = (html) => String(html||'').replace(/<[^>]+>/g, '');
-
-  // Resolve secondary photo using the same logic as personalizeSlide
-  let resolvedSecondary = null;
-  let resolvedSecondaryCaption = null;
-  if(bio && bio.secondaryPhoto){
-    if(typeof bio.secondaryPhoto === 'string' && bio.secondaryPhoto.startsWith('PERSONAL_')){
-      resolvedSecondary = PERSONAL_PHOTOS[bio.secondaryPhoto] || null;
-    } else {
-      resolvedSecondary = bio.secondaryPhoto;
-    }
-    resolvedSecondaryCaption = bio.secondaryCaption || null;
-  }
 
   let body;
   if(!bio){
@@ -5656,41 +6162,12 @@ function openBioModal(userName){
       `<span class="bio-modal-chip">${stripTags(m)}</span>`
     ).join('');
 
-    // The slide preview — renders the actual meet-pm.jpg slide with the rep's
-    // headshot overlaid (and small secondary photo if present), mirroring the
-    // exact layout the trainee sees on Slide 2.
+    // The slide preview — uses the same composer the trainee sees in Slide 2,
+    // so what the manager previews is exactly what the rep delivers.
     const slidePreviewHtml = `
-      <div class="bio-modal-slide-preview ${isWaiting ? 'is-waiting' : ''}">
-        <div class="bio-slide-frame">
-          <img class="bio-slide-base" src="${baseSlideImage}" alt="Slide 2 — Meet Your Project Manager" onerror="this.classList.add('failed')" />
-
-          <!-- Primary headshot overlay -->
-          ${bio.photo ? `
-            <div class="bio-slide-headshot">
-              <img src="${bio.photo}" alt="${stripTags(bio.fullName)}" onerror="this.style.display='none'" />
-            </div>
-          ` : ''}
-
-          <!-- Optional small secondary photo to build connection -->
-          ${resolvedSecondary ? `
-            <div class="bio-slide-secondary" title="${stripTags(resolvedSecondaryCaption || '')}">
-              <img src="${resolvedSecondary}" alt="${stripTags(resolvedSecondaryCaption || 'Personal photo')}" onerror="this.parentNode.style.display='none'" />
-              ${resolvedSecondaryCaption ? `<div class="bio-slide-secondary-caption">${stripTags(resolvedSecondaryCaption)}</div>` : ''}
-            </div>
-          ` : ''}
-
-          ${isWaiting ? `
-            <div class="bio-slide-waiting-banner">
-              <span>⏳</span> WAITING FOR BIO
-            </div>
-          ` : ''}
-        </div>
-        <div class="bio-slide-caption">
-          <span class="bio-slide-caption-num">Slide 2</span>
-          ${isWaiting
-            ? `Personalized slide pending — generic content shown`
-            : `${stripTags(bio.fullName)} — ${stripTags(bio.title)}`}
-        </div>
+      <div class="bio-modal-section bio-modal-slide-preview-wrap">
+        <div class="bio-modal-label">Slide 2 preview &mdash; exactly what your trainee sees</div>
+        ${composeBioSlideHTML(bio, {context:'modal'})}
       </div>
     `;
 
