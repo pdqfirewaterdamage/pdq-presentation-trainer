@@ -1702,15 +1702,9 @@ body{
 .bio-modal-section:last-child{ margin-bottom:0; }
 .bio-modal-header-row{
   display:flex; gap:16px; align-items:center;
-  padding-bottom:18px;
+  padding-bottom:14px;
+  margin-top:18px;
   border-bottom:1px solid var(--line-soft);
-}
-.bio-modal-photo-wrap{ flex:0 0 auto; }
-.bio-modal-photo{
-  width:72px; height:72px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid var(--line);
 }
 .bio-modal-meta{ flex:1; min-width:0; }
 .bio-modal-fullname{
@@ -1743,6 +1737,142 @@ body{
   background:rgba(232,162,40,0.15);
   color:#a86a0c;
 }
+
+/* ============================
+   Bio Modal — Slide 2 Preview
+   Renders the actual meet-pm.jpg slide image with the rep's headshot
+   overlaid and an optional small connection photo. Mirrors the layout
+   the trainee sees in Slide 2 so all bios feel consistent.
+   ============================ */
+.bio-modal-slide-preview{
+  margin-bottom:22px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:var(--shadow-sm);
+}
+.bio-slide-frame{
+  position:relative;
+  width:100%;
+  background:#f4f5f7;
+  /* The actual slide is 11x8.5 landscape — letterbox naturally */
+  aspect-ratio: 11 / 8.5;
+  overflow:hidden;
+}
+.bio-slide-base{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  background:#fff;
+}
+.bio-slide-base.failed{
+  opacity:0;
+}
+/* Primary headshot: large round overlay positioned over the "Meet Your PM" area */
+.bio-slide-headshot{
+  position:absolute;
+  top:18%;
+  left:8%;
+  width:24%;
+  aspect-ratio:1 / 1;
+  border-radius:50%;
+  border:5px solid #fff;
+  box-shadow: 0 8px 22px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.05);
+  overflow:hidden;
+  background:#fff;
+  z-index:2;
+}
+.bio-slide-headshot img{
+  display:block;
+  width:100%; height:100%;
+  object-fit:cover;
+}
+/* Secondary connection photo: smaller, positioned bottom-right.
+   Intentionally small — it's a personal touch, not a portrait. */
+.bio-slide-secondary{
+  position:absolute;
+  bottom:6%;
+  right:5%;
+  width:14%;
+  aspect-ratio:1 / 1;
+  border-radius:50%;
+  border:3px solid #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,.20), 0 0 0 1px rgba(0,0,0,.05);
+  overflow:hidden;
+  background:#fff;
+  z-index:3;
+}
+.bio-slide-secondary img{
+  display:block;
+  width:100%; height:100%;
+  object-fit:cover;
+}
+.bio-slide-secondary-caption{
+  position:absolute;
+  bottom:-22px;
+  left:50%;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  font-family:'Inter',sans-serif;
+  font-size:8.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--pdq-blue-deep);
+  background:#fff;
+  border:1px solid var(--line);
+  padding:2px 8px;
+  border-radius:99px;
+  display:none; /* off by default — keep the look clean */
+}
+/* Waiting overlay */
+.bio-modal-slide-preview.is-waiting .bio-slide-base{
+  filter: grayscale(.2) brightness(.92);
+}
+.bio-slide-waiting-banner{
+  position:absolute;
+  top:0; left:0; right:0;
+  background:linear-gradient(90deg, rgba(232,162,40,.95), rgba(216,128,18,.95));
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.22em;
+  text-align:center;
+  padding:6px 8px;
+  z-index:4;
+}
+.bio-slide-waiting-banner span{ margin-right:4px; }
+
+.bio-slide-caption{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 14px;
+  background:linear-gradient(90deg, var(--pdq-blue-pale) 0%, var(--paper) 100%);
+  border-top:1px solid var(--line-soft);
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:11.5px;
+  color:var(--ink-soft);
+}
+.bio-slide-caption-num{
+  font-family:'Inter',sans-serif;
+  font-style:normal;
+  font-size:9px;
+  letter-spacing:.26em;
+  text-transform:uppercase;
+  font-weight:800;
+  color:var(--pdq-blue-deep);
+  padding:3px 9px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:99px;
+  flex-shrink:0;
+}
+
 .bio-modal-label{
   font-family:'Inter',sans-serif;
   font-size:9.5px;
@@ -1806,17 +1936,6 @@ body{
   border-left:3px solid #e8a228;
   border-radius:4px;
   font-size:13px;
-}
-.bio-modal-secondary{
-  max-width:100%;
-  border-radius:8px;
-  border:1px solid var(--line);
-}
-.bio-modal-caption{
-  font-size:11px;
-  color:var(--ink-mute);
-  font-style:italic;
-  margin-top:6px;
 }
 .bio-modal-empty{
   padding:24px;
@@ -2668,8 +2787,13 @@ html, body{ max-width:100%; overflow-x:hidden; }
   .bio-modal-h{ font-size:18px; }
   .bio-modal-content{ padding:16px 18px; }
   .bio-modal-foot{ padding:12px 18px; }
-  .bio-modal-photo{ width:60px; height:60px; }
   .bio-modal-fullname{ font-size:16px; }
+  /* Slide preview adapts: keep the same proportions, just smaller */
+  .bio-slide-headshot{ border-width:3px; }
+  .bio-slide-secondary{ border-width:2px; }
+  .bio-slide-waiting-banner{ font-size:9px; letter-spacing:.18em; padding:5px 6px; }
+  .bio-slide-caption{ font-size:10.5px; padding:7px 11px; }
+  .bio-slide-caption-num{ font-size:8.5px; padding:2px 7px; }
 
   /* streak nudge tighter on mobile */
   .streak-nudge{ padding:12px 14px; gap:10px; }
@@ -5489,8 +5613,24 @@ function openBioModal(userName){
   const fakeUser = { name: userName };
   const bio = findBioForUser(fakeUser);
 
-  // Strip <strong> and other HTML tags for clean reading display, but keep line breaks
+  // The actual slide 2 base image from Supabase storage
+  const meetPmSlide = SLIDES.find(s => s.id === 'meet-pm');
+  const baseSlideImage = meetPmSlide ? meetPmSlide.image : '';
+
+  // Strip <strong> and other HTML tags for clean reading display
   const stripTags = (html) => String(html||'').replace(/<[^>]+>/g, '');
+
+  // Resolve secondary photo using the same logic as personalizeSlide
+  let resolvedSecondary = null;
+  let resolvedSecondaryCaption = null;
+  if(bio && bio.secondaryPhoto){
+    if(typeof bio.secondaryPhoto === 'string' && bio.secondaryPhoto.startsWith('PERSONAL_')){
+      resolvedSecondary = PERSONAL_PHOTOS[bio.secondaryPhoto] || null;
+    } else {
+      resolvedSecondary = bio.secondaryPhoto;
+    }
+    resolvedSecondaryCaption = bio.secondaryCaption || null;
+  }
 
   let body;
   if(!bio){
@@ -5516,11 +5656,48 @@ function openBioModal(userName){
       `<span class="bio-modal-chip">${stripTags(m)}</span>`
     ).join('');
 
-    body = `
-      <div class="bio-modal-section bio-modal-header-row">
-        <div class="bio-modal-photo-wrap">
-          ${bio.photo ? `<img class="bio-modal-photo" src="${bio.photo}" alt="${stripTags(bio.fullName)}" onerror="this.style.display='none'">` : ''}
+    // The slide preview — renders the actual meet-pm.jpg slide with the rep's
+    // headshot overlaid (and small secondary photo if present), mirroring the
+    // exact layout the trainee sees on Slide 2.
+    const slidePreviewHtml = `
+      <div class="bio-modal-slide-preview ${isWaiting ? 'is-waiting' : ''}">
+        <div class="bio-slide-frame">
+          <img class="bio-slide-base" src="${baseSlideImage}" alt="Slide 2 — Meet Your Project Manager" onerror="this.classList.add('failed')" />
+
+          <!-- Primary headshot overlay -->
+          ${bio.photo ? `
+            <div class="bio-slide-headshot">
+              <img src="${bio.photo}" alt="${stripTags(bio.fullName)}" onerror="this.style.display='none'" />
+            </div>
+          ` : ''}
+
+          <!-- Optional small secondary photo to build connection -->
+          ${resolvedSecondary ? `
+            <div class="bio-slide-secondary" title="${stripTags(resolvedSecondaryCaption || '')}">
+              <img src="${resolvedSecondary}" alt="${stripTags(resolvedSecondaryCaption || 'Personal photo')}" onerror="this.parentNode.style.display='none'" />
+              ${resolvedSecondaryCaption ? `<div class="bio-slide-secondary-caption">${stripTags(resolvedSecondaryCaption)}</div>` : ''}
+            </div>
+          ` : ''}
+
+          ${isWaiting ? `
+            <div class="bio-slide-waiting-banner">
+              <span>⏳</span> WAITING FOR BIO
+            </div>
+          ` : ''}
         </div>
+        <div class="bio-slide-caption">
+          <span class="bio-slide-caption-num">Slide 2</span>
+          ${isWaiting
+            ? `Personalized slide pending — generic content shown`
+            : `${stripTags(bio.fullName)} — ${stripTags(bio.title)}`}
+        </div>
+      </div>
+    `;
+
+    body = `
+      ${slidePreviewHtml}
+
+      <div class="bio-modal-section bio-modal-header-row">
         <div class="bio-modal-meta">
           <div class="bio-modal-fullname">${stripTags(bio.fullName)}</div>
           <div class="bio-modal-title">${stripTags(bio.title)}</div>
@@ -5552,14 +5729,6 @@ function openBioModal(userName){
         <div class="bio-modal-label">Coaching tip</div>
         <div class="bio-modal-body-text bio-modal-coaching">${bio.coachingTip || '—'}</div>
       </div>
-
-      ${bio.secondaryPhoto ? `
-      <div class="bio-modal-section">
-        <div class="bio-modal-label">Secondary photo</div>
-        <img class="bio-modal-secondary" src="${bio.secondaryPhoto}" alt="Personal photo" onerror="this.style.display='none'">
-        ${bio.secondaryCaption ? `<div class="bio-modal-caption">${stripTags(bio.secondaryCaption)}</div>` : ''}
-      </div>
-      ` : ''}
     `;
   }
 
@@ -5569,7 +5738,7 @@ function openBioModal(userName){
   overlay.innerHTML = `
     <div class="bio-modal" role="dialog" aria-modal="true" aria-label="Bio for ${userName}">
       <div class="bio-modal-head">
-        <div class="bio-modal-eyebrow">Bio · Slide 2</div>
+        <div class="bio-modal-eyebrow">Bio · Slide 2 Preview</div>
         <h2 class="bio-modal-h">${userName}</h2>
         <button class="bio-modal-close" aria-label="Close">×</button>
       </div>
