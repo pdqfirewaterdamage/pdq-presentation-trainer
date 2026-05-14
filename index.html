@@ -1630,6 +1630,28 @@ body{
 }
 .admin-add-row .btn{ flex:0 0 auto; }
 
+/* Rows in admin that exist as bios but aren't yet in Supabase */
+.admin-row-bio-only{
+  background:linear-gradient(90deg, rgba(232,162,40,.04), transparent);
+}
+.admin-row-bio-only td:first-child{
+  border-left:3px solid rgba(232,162,40,.7);
+}
+.admin-pill-not-added{
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:99px;
+  background:rgba(232,162,40,.15);
+  color:#a86a0c;
+  font-family:'Inter',sans-serif;
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  vertical-align:middle;
+}
+
 /* ---------- Bio Viewer Modal (Admin) ---------- */
 .bio-modal-overlay{
   position:fixed; inset:0;
@@ -1756,8 +1778,11 @@ body{
   box-shadow:var(--shadow-md);
   font-family:'Inter', sans-serif;
   color:var(--ink);
-  /* 11 x 8.5 letterbox is too tight for legibility on phones; allow taller */
-  min-height:auto;
+  /* Lock to 11 × 8.5 landscape — the actual tabletop deck page proportions.
+     This ensures the slide preview is exactly what the homeowner sees. */
+  aspect-ratio: 11 / 8.5;
+  display:flex;
+  flex-direction:column;
 }
 .composed-bio-slide-module{
   margin:0 0 22px;
@@ -1890,19 +1915,23 @@ body{
   padding:16px 28px 30px;
   position:relative;
   z-index:2;
+  flex:1 1 auto;
+  min-height:0;
 }
 
 /* Portrait card with brick-frame look — handled with subtle border + corner brackets */
 .composed-bio-portrait{
   display:flex;
-  align-items:flex-start;
+  align-items:stretch;
+  height:100%;
 }
 .composed-bio-portrait-frame{
   position:relative;
   width:100%;
+  height:100%;
   background:linear-gradient(180deg, #d4a878 0%, #c79466 100%);
-  /* The portrait card from the reference — tall portrait aspect, name banner overlay at bottom */
-  aspect-ratio: 3 / 4;
+  /* Fills the body height — matches the reference where the photo is the
+     full-height anchor of the left column. */
   border-radius:4px;
   overflow:hidden;
   box-shadow: 0 6px 18px rgba(0,0,0,.10);
@@ -1962,11 +1991,12 @@ body{
 .composed-bio-content{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:12px;
+  min-height:0;
 }
 .composed-bio-bullets-eyebrow{
   font-family:'Inter', sans-serif;
-  font-size:10px;
+  font-size:11px;
   font-weight:800;
   letter-spacing:.20em;
   color:var(--ink);
@@ -1979,11 +2009,11 @@ body{
   margin:0;
   display:flex;
   flex-direction:column;
-  gap:7px;
+  gap:10px;
 }
 .composed-bio-bullets li{
-  font-size:12px;
-  line-height:1.45;
+  font-size:13px;
+  line-height:1.5;
   color:var(--ink);
   display:flex;
   gap:8px;
@@ -2056,15 +2086,16 @@ body{
   font-size:10px;
 }
 
-/* About-Me personal photo — small circle, top-right of the box */
+/* About-Me personal photo — larger circle, anchored to the right edge of the
+   About Me box. Sized to feel like a real connection photo, not an afterthought. */
 .composed-bio-aboutme-photo{
   position:absolute;
-  top:-4px; right:-4px;
-  width:44px; height:44px;
+  top:-10px; right:-10px;
+  width:72px; height:72px;
   border-radius:50%;
   overflow:hidden;
-  border:2.5px solid #fff;
-  box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06);
+  border:3px solid #fff;
+  box-shadow: 0 5px 14px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
   background:#fff;
   z-index:3;
 }
@@ -2072,6 +2103,10 @@ body{
   display:block;
   width:100%; height:100%;
   object-fit:cover;
+}
+/* When there's an aboutme photo, reserve right-side padding so the list doesn't run under it */
+.composed-bio-box-aboutme.has-photo{
+  padding-right:70px;
 }
 
 /* The close pill — blue gradient with the required question */
@@ -3248,7 +3283,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.15</div>
+      <div class="app-version" id="appVersion">V.16</div>
     </div>
   </aside>
 
@@ -4379,7 +4414,7 @@ function composeBioSlideHTML(bio, opts){
                 ${expect.map(e => `<li><span class="composed-bio-box-check">✓</span> ${e}</li>`).join('')}
               </ul>
             </div>
-            <div class="composed-bio-box composed-bio-box-aboutme">
+            <div class="composed-bio-box composed-bio-box-aboutme ${resolvedSecondary ? 'has-photo' : ''}">
               <div class="composed-bio-box-title">ABOUT ME</div>
               ${resolvedSecondary ? `
                 <div class="composed-bio-aboutme-photo" title="${(resolvedSecondaryCaption||'').replace(/"/g,'&quot;')}">
@@ -5956,10 +5991,55 @@ async function renderAdmin(){
 
   const team = await fetchTeamFromSupabase();
 
+  // Merge in BIOS entries that don't yet have a matching Supabase user.
+  // This makes every rep visible in the admin panel — even ones not yet
+  // added to the users table. They get a one-click "+ Add to Roster" button.
+  const supabaseNames = new Set((team || []).map(t => bioKey(t.name)));
+  const bioOnlyEntries = [];
+  Object.keys(BIOS).forEach(bioK => {
+    const bio = BIOS[bioK];
+    const fullKey = bioKey(bio.fullName || bioK);
+    if(supabaseNames.has(fullKey)) return;
+    // Also check first-initial form to avoid duplicates ("Ivan R." in supabase, "ivan" in bios)
+    const firstAndInitial = (() => {
+      const parts = fullKey.split(' ');
+      if(parts.length < 2) return null;
+      return parts[0] + ' ' + parts[1][0];
+    })();
+    if(firstAndInitial && supabaseNames.has(firstAndInitial)) return;
+    // Look for any supabase name that resolves to this bio via findBioForUser
+    const alreadyMatched = (team || []).some(t => {
+      const matched = findBioForUser({ name: t.name });
+      return matched && bioKey(matched.fullName || '') === fullKey;
+    });
+    if(alreadyMatched) return;
+    bioOnlyEntries.push({
+      id: 'bio:' + bioK,
+      name: bio.fullName || bioK,
+      role: bio.status === 'waiting' ? 'Bio pending' : 'Bio ready',
+      avg: 0,
+      attempts: 0,
+      streak: 0,
+      lastActive: '—',
+      weakest: '—',
+      _lastTs: 0,
+      bioOnly: true,
+      bioStatus: bio.status,
+    });
+  });
+  // Combine Supabase users first, then bio-only entries, sorted alphabetically
+  const allTeam = [
+    ...team.slice().sort((a,b) => a.name.localeCompare(b.name)),
+    ...bioOnlyEntries.sort((a,b) => a.name.localeCompare(b.name))
+  ];
+
+  const inSupabaseCount = team.length;
+  const bioOnlyCount = bioOnlyEntries.length;
+
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.15</div>
+        <div class="page-eyebrow">Admin · App V.16</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
@@ -5969,7 +6049,7 @@ async function renderAdmin(){
     <div class="panel" style="margin-bottom:24px">
       <div class="panel-head">
         <div class="panel-title">Team <em>roster</em></div>
-        <div class="panel-tag">${team.length} ${team.length===1?'member':'members'}</div>
+        <div class="panel-tag">${inSupabaseCount} in roster${bioOnlyCount ? ` · ${bioOnlyCount} bio${bioOnlyCount===1?'':'s'} not yet added` : ''}</div>
       </div>
 
       <div class="admin-add-row">
@@ -5979,9 +6059,10 @@ async function renderAdmin(){
           <option value="manager">Manager</option>
         </select>
         <button class="btn btn-primary" id="adminAddBtn">+ Add</button>
+        ${bioOnlyCount ? `<button class="btn btn-ghost" id="adminSyncAllBtn" title="Add all ${bioOnlyCount} bio${bioOnlyCount===1?'':'s'} to the roster in one click">↻ Sync all bios (${bioOnlyCount})</button>` : ''}
       </div>
 
-      ${team.length === 0 ? `
+      ${allTeam.length === 0 ? `
         <div class="empty" style="padding:30px 22px;color:var(--ink-mute)">
           No team members yet. Add your first one above.
         </div>
@@ -5994,12 +6075,24 @@ async function renderAdmin(){
               <th>Role</th>
               <th style="width:80px">Reps</th>
               <th style="width:90px">Avg</th>
-              <th style="width:120px">Last Active</th>
+              <th style="width:130px">Last Active</th>
               <th style="width:380px">Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${team.map(t => `
+            ${allTeam.map(t => t.bioOnly ? `
+              <tr data-bio-key="${t.id.replace(/^bio:/,'')}" class="admin-row-bio-only">
+                <td><strong>${t.name}</strong> <span class="admin-pill-not-added">not in roster</span></td>
+                <td style="color:var(--ink-mute)">${t.role}</td>
+                <td style="color:var(--ink-mute)">—</td>
+                <td><span class="score-pill">—</span></td>
+                <td><span class="last-active">never signed in</span></td>
+                <td class="admin-actions-cell">
+                  <button class="btn btn-ghost btn-sm admin-bio-btn" data-user-name="${t.name.replace(/"/g,'&quot;')}">View Bio</button>
+                  <button class="btn btn-primary btn-sm admin-add-from-bio-btn" data-user-name="${t.name.replace(/"/g,'&quot;')}">+ Add to Roster</button>
+                </td>
+              </tr>
+            ` : `
               <tr data-user-id="${t.id}">
                 <td><strong>${t.name}</strong></td>
                 <td style="color:var(--ink-mute)">${t.role}</td>
@@ -6071,6 +6164,45 @@ async function renderAdmin(){
       openBioModal(userName);
     });
   });
+
+  // Wire up "+ Add to Roster" buttons (for bios not yet in Supabase)
+  document.querySelectorAll('.admin-add-from-bio-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const userName = btn.dataset.userName;
+      btn.disabled = true;
+      btn.textContent = 'Adding…';
+      const { error } = await supa.from('users').insert({ name: userName, role: 'trainee' });
+      if(error){
+        alert('Add failed: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = '+ Add to Roster';
+        return;
+      }
+      renderAdmin();
+    });
+  });
+
+  // Wire up "Sync all bios" — bulk-add every bio-only entry to Supabase
+  const syncAllBtn = document.getElementById('adminSyncAllBtn');
+  if(syncAllBtn){
+    syncAllBtn.addEventListener('click', async () => {
+      const bioRows = document.querySelectorAll('.admin-row-bio-only');
+      const names = Array.from(bioRows).map(r => r.querySelector('.admin-add-from-bio-btn')?.dataset.userName).filter(Boolean);
+      if(!names.length) return;
+      if(!confirm(`Add all ${names.length} pending bios to your team roster?\n\nThey will be added as trainees and can sign in immediately.`)) return;
+      syncAllBtn.disabled = true;
+      syncAllBtn.textContent = 'Syncing…';
+      const inserts = names.map(name => ({ name, role: 'trainee' }));
+      const { error } = await supa.from('users').insert(inserts);
+      if(error){
+        alert('Sync failed: ' + error.message);
+        syncAllBtn.disabled = false;
+        syncAllBtn.textContent = `↻ Sync all bios (${names.length})`;
+        return;
+      }
+      renderAdmin();
+    });
+  }
 
   document.querySelectorAll('.admin-edit-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
