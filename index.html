@@ -1791,11 +1791,15 @@ body{
   margin:6px 0 0;
 }
 
-/* Decorative top/bottom green-to-blue swooshes */
+/* Decorative top/bottom green-to-blue swooshes.
+   These are inline flex items (not absolute) — they occupy their own row at
+   the very top and bottom of the slide, so body content can never overlap
+   them. This was the source of the close-pill-overlapping-swoosh issues. */
 .composed-bio-swoosh{
-  position:absolute;
-  left:0; right:0;
+  position:relative;
+  width:100%;
   height:14px;
+  flex-shrink:0;
   z-index:1;
   background:
     linear-gradient(90deg,
@@ -1810,8 +1814,8 @@ body{
   background-position: 0 2px, 0 8px;
   background-repeat: no-repeat;
 }
-.composed-bio-swoosh-top{ top:0; }
-.composed-bio-swoosh-bottom{ bottom:0; }
+.composed-bio-swoosh-top{ }
+.composed-bio-swoosh-bottom{ }
 
 /* PDQ Logo top right */
 .composed-bio-logo{
@@ -1909,15 +1913,14 @@ body{
 }
 
 /* Body: portrait card + content side-by-side.
-   Padding bottom must be larger than the swoosh height (14px) so the
-   portrait and right-column content sit ABOVE the bottom swoosh, not
-   under it. `overflow:hidden` ensures any spill (very long bullets)
-   clips cleanly instead of poking through the swoosh. */
+   Swooshes are now inline flex items at top/bottom of the slide — they own
+   their own row and cannot be overlapped by body content. `overflow:hidden`
+   ensures any spill clips cleanly. */
 .composed-bio-body{
   display:grid;
   grid-template-columns: 38% 1fr;
   gap:22px;
-  padding:14px 28px 24px;
+  padding:12px 28px 12px;
   position:relative;
   z-index:2;
   flex:1 1 auto;
@@ -1967,7 +1970,7 @@ body{
 .composed-bio-portrait-nameplate{
   position:absolute;
   bottom:0; left:0; right:0;
-  padding:14px 14px 18px;
+  padding:14px 10px 16px;
   background:linear-gradient(180deg, rgba(20,30,50,0) 0%, rgba(20,30,50,.7) 50%, rgba(20,30,50,.92) 100%);
   text-align:center;
   z-index:2;
@@ -1976,21 +1979,30 @@ body{
   font-family:'Fraunces', serif;
   font-style:italic;
   font-weight:500;
-  font-size:24px;
+  font-size:22px;
   color:#fff;
   line-height:1.1;
   margin-bottom:4px;
   letter-spacing:.005em;
   text-shadow:0 2px 4px rgba(0,0,0,.4);
+  /* Names should fit on one line — small enough to almost always fit */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
+/* Role line: ALWAYS one line, tighter letter-spacing, slightly smaller, never
+   wraps into the swoosh. This was the source of Leo's 3-line wrap issue. */
 .composed-bio-portrait-role{
   font-family:'Inter', sans-serif;
-  font-size:8.5px;
+  font-size:7.5px;
   font-weight:700;
-  letter-spacing:.22em;
+  letter-spacing:.16em;
   color:var(--pdq-green);
   text-transform:uppercase;
   text-shadow:0 1px 3px rgba(0,0,0,.5);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 /* Right-side content.
@@ -2096,16 +2108,17 @@ body{
   font-size:10px;
 }
 
-/* About-Me personal photo — larger circle, anchored to the right edge of the
-   About Me box. Sized to feel like a real connection photo, not an afterthought. */
+/* About-Me personal photo — a real connection photo sized to make the
+   homeowner actually look at it. Anchored to the right edge of the
+   About Me box, extending up above the box for visual prominence. */
 .composed-bio-aboutme-photo{
   position:absolute;
-  top:-8px; right:-8px;
-  width:64px; height:64px;
+  top:-18px; right:-12px;
+  width:92px; height:92px;
   border-radius:50%;
   overflow:hidden;
-  border:3px solid #fff;
-  box-shadow: 0 5px 14px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
+  border:4px solid #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.06);
   background:#fff;
   z-index:3;
 }
@@ -2116,7 +2129,7 @@ body{
 }
 /* When there's an aboutme photo, reserve right-side padding so the list doesn't run under it */
 .composed-bio-box-aboutme.has-photo{
-  padding-right:62px;
+  padding-right:90px;
 }
 
 /* The close pill — blue gradient with the required question */
@@ -3294,7 +3307,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.18</div>
+      <div class="app-version" id="appVersion">V.19</div>
     </div>
   </aside>
 
@@ -6053,7 +6066,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.18</div>
+        <div class="page-eyebrow">Admin · App V.19</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
