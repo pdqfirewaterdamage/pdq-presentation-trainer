@@ -1909,14 +1909,15 @@ body{
 }
 
 /* Body: portrait card + content side-by-side.
-   Padding bottom is small because the bottom swoosh sits below the body.
-   `overflow:hidden` ensures any spill (very long bullets) clips cleanly
-   instead of poking through the swoosh. */
+   Padding bottom must be larger than the swoosh height (14px) so the
+   portrait and right-column content sit ABOVE the bottom swoosh, not
+   under it. `overflow:hidden` ensures any spill (very long bullets)
+   clips cleanly instead of poking through the swoosh. */
 .composed-bio-body{
   display:grid;
   grid-template-columns: 38% 1fr;
   gap:22px;
-  padding:14px 28px 18px;
+  padding:14px 28px 24px;
   position:relative;
   z-index:2;
   flex:1 1 auto;
@@ -3293,7 +3294,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.17</div>
+      <div class="app-version" id="appVersion">V.18</div>
     </div>
   </aside>
 
@@ -4117,7 +4118,9 @@ const BIOS = {
 const WAITING_REPS = [
   { name: 'Cheryl K.',     fullName: 'Cheryl Knox',         photo: TEAM_PHOTO_BASE + '47298-cheryl-knox.jpg' },
   { name: 'James B.',      fullName: 'James Bate',          photo: TEAM_PHOTO_BASE + '63076-james-bate.jpg' },
-  { name: 'Michael M.',    fullName: 'Michael Moughrabie',  photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg' },
+  { name: 'Mike M.',       fullName: 'Mike Moughrabie',     photo: TEAM_PHOTO_BASE + '66035-michael-moughrabie.jpg',
+                           secondaryPhoto: 'https://jipqddhfztfjppufnost.supabase.co/storage/v1/object/public/slides/personal-michael.jpg',
+                           secondaryCaption: 'Volunteer firefighter' },
   { name: 'Elizabeth B.',  fullName: 'Elizabeth Baresh',    photo: TEAM_PHOTO_BASE + '21177-elizabeth-baresh.jpg' },
   { name: 'Tim R.',        fullName: 'Tim Rozansky',        photo: TEAM_PHOTO_BASE + '74458-tim-rozansky.jpg' },
   { name: 'Tim Jr.',       fullName: 'Tim Rozansky Jr',     photo: TEAM_PHOTO_BASE + '59685-tim-rozansky-jr.jpg' }
@@ -4128,7 +4131,8 @@ WAITING_REPS.forEach(r => {
     fullName: r.fullName,
     title: 'PDQ Restoration',
     photo: r.photo,
-    secondaryPhoto: null,
+    secondaryPhoto: r.secondaryPhoto || null,
+    secondaryCaption: r.secondaryCaption || null,
     title_line: `I'm ${r.fullName.split(' ')[0]} — and my bio is still being finalized.`,
     talkingPoints: [
       `<strong>⏳ Bio in progress.</strong> Your personalized talking points haven\u2019t been finalized yet.`,
@@ -6049,7 +6053,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.17</div>
+        <div class="page-eyebrow">Admin · App V.18</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
