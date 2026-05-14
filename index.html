@@ -2023,7 +2023,10 @@ body{
   color:var(--ink);
   text-transform:uppercase;
   margin-bottom:0;
+  flex-shrink:0;
 }
+/* Bullets can shrink (be clipped) if total content is too tall — the close
+   pill and boxes are higher priority and always visible. */
 .composed-bio-bullets{
   list-style:none;
   padding:0;
@@ -2031,6 +2034,9 @@ body{
   display:flex;
   flex-direction:column;
   gap:7px;
+  min-height:0;
+  overflow:hidden;
+  flex-shrink:1;
 }
 .composed-bio-bullets li{
   font-size:12px;
@@ -2049,7 +2055,7 @@ body{
 }
 .composed-bio-bullet-text{ flex:1; }
 
-/* Two boxes: "What You Can Expect" + "About Me" */
+/* Two boxes: "What You Can Expect" + "About Me" — never shrinks */
 .composed-bio-boxes{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -2059,6 +2065,7 @@ body{
   padding:10px 12px;
   border-left:3px solid var(--pdq-blue);
   margin-top:2px;
+  flex-shrink:0;
 }
 .composed-bio-box{
   position:relative;
@@ -3307,7 +3314,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.19</div>
+      <div class="app-version" id="appVersion">V.20</div>
     </div>
   </aside>
 
@@ -4256,29 +4263,82 @@ function deriveAboutMeItems(bio){
   let content = m[1]
     .replace(/&ldquo;|&rdquo;|&mdash;|&hellip;/g, m => ({'&ldquo;':'"','&rdquo;':'"','&mdash;':'—','&hellip;':'…'}[m]))
     .replace(/&[a-z]+;/g, ' ')
-    .trim();
-  // Split on commas and "and", but NOT inside parentheses.
-  // First protect parenthetical content by replacing inner commas AND "and" with placeholders.
+    .trim()
+    .replace(/^["']|["']$/g, '');
+
+  // DETECTION: is this a list of items, or a narrative paragraph?
+  // Heuristic: if average part length is over 35 chars or there are no commas,
+  // it's narrative. For narratives, try to pull keywords; otherwise show nothing
+  // and let the box be empty rather than show gibberish like "I was recently".
+  const hasMultipleItems = (content.match(/,/g) || []).length >= 2;
+  const isNarrative = !hasMultipleItems || /^I (was|am|have)\b|recently|brought|meaning/i.test(content);
+
+  if(isNarrative){
+    // Pull out short noun phrases — words like "grandfather", "kids", "wife",
+    // "husband", "son", "daughter", "dog", "cat", "hobby names".
+    const keywords = [];
+    const patterns = [
+      /\b(grand(?:father|mother|son|daughter|kids?))\b/i,
+      /\b(husband|wife|partner|fianc(?:e|ée))\b/i,
+      /\b(daughter|son|kids?|children)\b/i,
+      /\b(dog|cat|puppy|kitten|pet)\b/i,
+      /\b(fishing|hunting|golf|baking|cooking|gardening|hiking|running|biking)\b/i,
+      /\b(family)\b/i,
+    ];
+    patterns.forEach(re => {
+      const mm = content.match(re);
+      if(mm && !keywords.includes(mm[1].toLowerCase())){
+        // Capitalize first letter
+        const word = mm[1].toLowerCase();
+        keywords.push(word.charAt(0).toUpperCase() + word.slice(1));
+      }
+    });
+    if(keywords.length >= 1) return keywords.slice(0, 3);
+    // Last resort: show a single short summary phrase
+    return [];
+  }
+
+  // List-mode: split on commas and "and", but NOT inside parentheses.
   const protectedContent = content.replace(/\(([^)]*)\)/g, (m, inner) =>
     '(' + inner.replace(/,/g, '\u0001').replace(/\s+and\s+/gi, '\u0002') + ')'
   );
-  const parts = protectedContent
+  let parts = protectedContent
     .split(/,\s*|\s+and\s+/i)
-    .map(s => s.trim().replace(/\u0001/g, ',').replace(/\u0002/g, ' and '))
-    .filter(s => s.length > 0 && s.length < 80);
-  return parts.slice(0, 4);
+    .map(s => s.trim().replace(/\u0001/g, ',').replace(/\u0002/g, ' and '));
+
+  // Each item must be short — keywords only. Hard cap at 28 chars.
+  parts = parts
+    .filter(s => s.length > 0)
+    .map(s => {
+      s = s.replace(/^["']|["']$/g, '').trim();
+      if(s.length > 28){
+        const words = s.split(/\s+/).slice(0, 3).join(' ');
+        return words.length <= 28 ? words : s.substring(0, 25) + '…';
+      }
+      return s;
+    })
+    .filter(s => s.length > 1);
+  return parts.slice(0, 3);
 }
 
 /* Extract the "What You Can Expect" content from the talking point that
    specifically mentions it. Falls back to deliverable-sounding mustSay items. */
 function deriveExpectItems(bio){
   if(!bio || !bio.talkingPoints) return [];
+  const shorten = (s) => {
+    s = s.replace(/^["']|["']$/g, '').trim();
+    if(s.length > 32){
+      const words = s.split(/\s+/).slice(0, 4).join(' ');
+      return words.length <= 32 ? words : s.substring(0, 30) + '…';
+    }
+    return s;
+  };
   const expectTp = bio.talkingPoints.find(tp => /What You Can Expect/i.test(tp));
   if(expectTp){
     const m = expectTp.match(/<strong>([^<]+)<\/strong>/);
     if(m){
       let content = m[1].replace(/&ldquo;|&rdquo;/g, '"').trim();
-      const parts = content.split(/,\s*|\s+and\s+/i).map(s => s.trim()).filter(s => s.length > 0 && s.length < 60);
+      const parts = content.split(/,\s*|\s+and\s+/i).map(s => shorten(s.trim())).filter(s => s.length > 1);
       if(parts.length >= 2) return parts.slice(0, 3);
     }
   }
@@ -4290,15 +4350,15 @@ function deriveExpectItems(bio){
       if(m){
         let content = m[1].replace(/&ldquo;|&rdquo;/g, '"').trim();
         content.split(/,\s*|\s+and\s+/i).forEach(p => {
-          const trimmed = p.trim();
-          if(trimmed.length > 5 && trimmed.length < 50 && !deliverables.includes(trimmed)) deliverables.push(trimmed);
+          const trimmed = shorten(p.trim());
+          if(trimmed.length > 5 && !deliverables.includes(trimmed)) deliverables.push(trimmed);
         });
       }
     }
   });
   if(deliverables.length >= 2) return deliverables.slice(0, 3);
   // Final fallback — generic items every PDQ rep can promise
-  return ['Clear communication, start to finish', 'Consistent, high-quality results', 'Dependable support through every step'];
+  return ['Clear communication', 'Consistent results', 'Dependable support'];
 }
 
 /* Extract the substantive bullet points (the meat) from the bio's talking
@@ -4319,13 +4379,23 @@ function deriveBullets(bio){
       // Strip surrounding quotes
       content = content.replace(/^&ldquo;|&rdquo;$/g, '').replace(/^&ldquo;/,'').replace(/&rdquo;$/,'');
       content = content.replace(/^["']|["']$/g, '');
-      if(content.length > 4 && content.length < 200){
+      // Truncate to keep at ~2 lines max in the right column (~110 chars wraps to 2 lines)
+      if(content.length > 110){
+        content = content.substring(0, 105).replace(/\s+\S*$/, '') + '…';
+      }
+      if(content.length > 4){
         bullets.push(content);
       }
     } else {
       // No strong tag — use whole line stripped
       const cleaned = deriveBulletFromTalkingPoint(tp);
-      if(cleaned && cleaned.length < 200) bullets.push(cleaned.replace(/<[^>]+>/g,''));
+      if(cleaned){
+        let stripped = cleaned.replace(/<[^>]+>/g,'');
+        if(stripped.length > 110){
+          stripped = stripped.substring(0, 105).replace(/\s+\S*$/, '') + '…';
+        }
+        if(stripped.length > 4) bullets.push(stripped);
+      }
     }
   });
   return bullets.slice(0, 5);
@@ -6066,7 +6136,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.19</div>
+        <div class="page-eyebrow">Admin · App V.20</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
