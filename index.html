@@ -1858,11 +1858,12 @@ body{
   color:var(--pdq-green-deep);
 }
 
-/* Header */
+/* Header — kept compact so the body has room for 5 bullets + boxes + close pill */
 .composed-bio-header{
   position:relative;
   z-index:2;
-  padding:34px 28px 8px;
+  padding:24px 28px 6px;
+  flex-shrink:0;
 }
 .composed-bio-eyebrow{
   font-family:'Inter', sans-serif;
@@ -1871,12 +1872,12 @@ body{
   font-weight:700;
   color:var(--pdq-blue);
   text-transform:uppercase;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 .composed-bio-h{
   font-family:'Fraunces', serif;
   font-weight:400;
-  font-size:34px;
+  font-size:30px;
   line-height:1.1;
   color:var(--ink);
   letter-spacing:-.02em;
@@ -1907,16 +1908,20 @@ body{
   filter: grayscale(.2) brightness(.92);
 }
 
-/* Body: portrait card + content side-by-side */
+/* Body: portrait card + content side-by-side.
+   Padding bottom is small because the bottom swoosh sits below the body.
+   `overflow:hidden` ensures any spill (very long bullets) clips cleanly
+   instead of poking through the swoosh. */
 .composed-bio-body{
   display:grid;
   grid-template-columns: 38% 1fr;
   gap:22px;
-  padding:16px 28px 30px;
+  padding:14px 28px 18px;
   position:relative;
   z-index:2;
   flex:1 1 auto;
   min-height:0;
+  overflow:hidden;
 }
 
 /* Portrait card with brick-frame look — handled with subtle border + corner brackets */
@@ -1987,21 +1992,24 @@ body{
   text-shadow:0 1px 3px rgba(0,0,0,.5);
 }
 
-/* Right-side content */
+/* Right-side content.
+   Sized tight enough that 5 bullets + boxes + close pill always fit
+   inside the 11×8.5 frame without clipping. */
 .composed-bio-content{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
   min-height:0;
+  overflow:hidden;
 }
 .composed-bio-bullets-eyebrow{
   font-family:'Inter', sans-serif;
-  font-size:11px;
+  font-size:10.5px;
   font-weight:800;
   letter-spacing:.20em;
   color:var(--ink);
   text-transform:uppercase;
-  margin-bottom:2px;
+  margin-bottom:0;
 }
 .composed-bio-bullets{
   list-style:none;
@@ -2009,11 +2017,11 @@ body{
   margin:0;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:7px;
 }
 .composed-bio-bullets li{
-  font-size:13px;
-  line-height:1.5;
+  font-size:12px;
+  line-height:1.4;
   color:var(--ink);
   display:flex;
   gap:8px;
@@ -2035,16 +2043,17 @@ body{
   gap:10px;
   background:var(--paper);
   border-radius:6px;
-  padding:12px 14px;
+  padding:10px 12px;
   border-left:3px solid var(--pdq-blue);
-  margin-top:4px;
+  margin-top:2px;
 }
 .composed-bio-box{
   position:relative;
+  min-width:0;
 }
 .composed-bio-box-aboutme{
   border-left:1px solid var(--line-soft);
-  padding-left:14px;
+  padding-left:12px;
 }
 .composed-bio-box-title{
   font-family:'Inter', sans-serif;
@@ -2053,7 +2062,7 @@ body{
   font-weight:800;
   color:var(--ink);
   text-transform:uppercase;
-  margin-bottom:6px;
+  margin-bottom:5px;
 }
 .composed-bio-box-list{
   list-style:none;
@@ -2061,17 +2070,17 @@ body{
   margin:0;
   display:flex;
   flex-direction:column;
-  gap:3px;
+  gap:2px;
 }
 .composed-bio-box-list li{
   font-family:'Fraunces', serif;
   font-style:italic;
-  font-size:11px;
+  font-size:10.5px;
   color:var(--ink);
   display:flex;
   gap:6px;
   align-items:baseline;
-  line-height:1.35;
+  line-height:1.3;
 }
 .composed-bio-box-check{
   color:var(--pdq-blue);
@@ -2090,8 +2099,8 @@ body{
    About Me box. Sized to feel like a real connection photo, not an afterthought. */
 .composed-bio-aboutme-photo{
   position:absolute;
-  top:-10px; right:-10px;
-  width:72px; height:72px;
+  top:-8px; right:-8px;
+  width:64px; height:64px;
   border-radius:50%;
   overflow:hidden;
   border:3px solid #fff;
@@ -2106,24 +2115,25 @@ body{
 }
 /* When there's an aboutme photo, reserve right-side padding so the list doesn't run under it */
 .composed-bio-box-aboutme.has-photo{
-  padding-right:70px;
+  padding-right:62px;
 }
 
 /* The close pill — blue gradient with the required question */
 .composed-bio-close-pill{
-  margin-top:6px;
+  margin-top:4px;
   background:linear-gradient(180deg, var(--pdq-blue) 0%, var(--pdq-blue-deep) 100%);
   border:1px solid var(--pdq-blue-deep);
   border-radius:8px;
-  padding:10px 18px;
+  padding:9px 18px;
   text-align:center;
   box-shadow: 0 4px 10px rgba(0,75,150,.22);
   position:relative;
+  flex-shrink:0;
 }
 .composed-bio-close-pill span{
   font-family:'Fraunces', serif;
   font-style:italic;
-  font-size:14px;
+  font-size:13.5px;
   font-weight:500;
   color:#fff;
 }
@@ -3283,7 +3293,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.16</div>
+      <div class="app-version" id="appVersion">V.17</div>
     </div>
   </aside>
 
@@ -4301,7 +4311,7 @@ function deriveBullets(bio){
       if(cleaned && cleaned.length < 200) bullets.push(cleaned.replace(/<[^>]+>/g,''));
     }
   });
-  return bullets.slice(0, 6);
+  return bullets.slice(0, 5);
 }
 
 /* Derive the short, capitalized role label shown under the rep's name in the
@@ -6039,7 +6049,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.16</div>
+        <div class="page-eyebrow">Admin · App V.17</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
