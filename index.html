@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1589,6 +1588,74 @@ body{
 .delta.down{ color:var(--warn); }
 
 /* ---------- Admin bulk actions ---------- */
+
+/* Inline warning shown in place of the scoring spinner when real AI scoring
+   fails and we fall back to simulated. Replaces the previous one-line warning
+   that scrolled off the screen too fast. */
+.score-fallback-warning{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  padding:18px 20px;
+  background:linear-gradient(180deg, #fff7e8 0%, #fef0d3 100%);
+  border:1px solid #e8a228;
+  border-left:4px solid #d8800f;
+  border-radius:8px;
+  margin:8px 0;
+}
+.score-fallback-icon{
+  font-size:24px;
+  line-height:1;
+  flex-shrink:0;
+}
+.score-fallback-body strong{
+  font-family:'Fraunces',serif;
+  font-size:15px;
+  color:#7a4a0a;
+  display:block;
+  margin-bottom:6px;
+}
+.score-fallback-detail{
+  font-family:'Inter',sans-serif;
+  font-size:11.5px;
+  color:#8b5a14;
+  font-family:'SF Mono', Menlo, monospace;
+  background:rgba(216,128,15,.08);
+  padding:6px 8px;
+  border-radius:4px;
+  word-break:break-word;
+  margin-bottom:6px;
+}
+.score-fallback-hint{
+  font-size:12px;
+  color:#7a4a0a;
+  line-height:1.45;
+}
+
+/* Persistent banner shown ABOVE the score report if Supabase save fails.
+   Stays visible until the user navigates away — does NOT auto-dismiss. */
+.save-failure-banner{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:14px 18px;
+  background:linear-gradient(180deg, #fde8e8 0%, #fad4d4 100%);
+  border:1px solid #d32f2f;
+  border-left:4px solid #b71c1c;
+  border-radius:8px;
+  margin:0 0 16px;
+  color:#7a1f1f;
+}
+.save-failure-icon{
+  font-size:22px;
+  line-height:1;
+  flex-shrink:0;
+}
+.save-failure-banner strong{
+  font-family:'Fraunces',serif;
+  font-size:14px;
+  color:#7a1f1f;
+}
 .admin-bulk-body{ padding:18px 22px; }
 .admin-bulk-row{
   display:flex;
@@ -3314,7 +3381,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.20</div>
+      <div class="app-version" id="appVersion">V.21</div>
     </div>
   </aside>
 
@@ -3516,6 +3583,26 @@ async function ensureRemoteUser(){
   if(!store.user) return null;
   if(store.user.remoteId) return store.user.remoteId;
 
+  // Look up an existing user by name FIRST — only create a new record if no
+  // match exists. Prevents duplicate user accounts when the same person signs
+  // in on a different device, or via the "I'm new" path with a name that's
+  // already in the roster.
+  const name = (store.user.name || '').trim();
+  if(name){
+    const { data: existing, error: lookupErr } = await supa
+      .from("users")
+      .select("id, role")
+      .ilike("name", name)
+      .limit(1)
+      .maybeSingle();
+    if(!lookupErr && existing){
+      store.user.remoteId = existing.id;
+      if(existing.role) store.user.role = existing.role;
+      saveStore(store);
+      return existing.id;
+    }
+  }
+
   const { data, error } = await supa.from("users").insert({
     name: store.user.name,
     role: store.user.role || "trainee",
@@ -3527,10 +3614,14 @@ async function ensureRemoteUser(){
   return data.id;
 }
 
-async function saveRemoteAttempt({ slide, durationSec, videoPath, transcribeResult, scoreResult }){
+async function saveRemoteAttempt({ slide, durationSec, videoPath, transcribeResult, scoreResult, scoringPath, scoringError }){
   if(!BACKEND_ENABLED()) return;
   const userId = await ensureRemoteUser();
-  const { error } = await supa.from("attempts").insert({
+  if(!userId){
+    throw new Error("Couldn't establish user account for attempt save");
+  }
+
+  const payload = {
     user_id: userId,
     slide_id: slide.id,
     duration_sec: Math.round(durationSec || 0),
@@ -3546,8 +3637,12 @@ async function saveRemoteAttempt({ slide, durationSec, videoPath, transcribeResu
     improvements: scoreResult.improvements || [],
     drills: scoreResult.drills || [],
     coach_summary: scoreResult.coach_summary || null,
-  });
-  if(error) console.warn("Remote attempt save failed:", error);
+  };
+  const { error } = await supa.from("attempts").insert(payload);
+  if(error){
+    console.error("Remote attempt save failed:", error, payload);
+    throw new Error("Supabase save failed: " + error.message);
+  }
 }
 
 /* =====================================================================
@@ -5511,11 +5606,18 @@ function simulateRecording(slide){
 async function runScoring(slide, durationSec){
   const mount = document.getElementById('scoreReportMount');
 
+  // Track which path was used and any failure context — used to mark the
+  // attempt in Supabase so we know later if it was real-scored or simulated.
+  let scoringPath = 'simulated'; // 'real' | 'simulated' | 'simulated-after-fail'
+  let realScoringError = null;
+  let uploadedPath = null;
+
   // Try real backend if available AND we have a recorded blob
   if(BACKEND_ENABLED() && recordedBlob){
     try{
       mount.innerHTML = `<div class="empty">Uploading your rep&hellip;</div>`;
       const { path, signedUrl } = await uploadRecording(recordedBlob, slide);
+      uploadedPath = path;
 
       mount.innerHTML = `<div class="empty">Transcribing audio with AssemblyAI&hellip;<br><span style="font-size:12px;color:var(--ink-mute)">This usually takes 20&ndash;40 seconds.</span></div>`;
       const transcribeResult = await callTranscribe(signedUrl);
@@ -5547,42 +5649,114 @@ async function runScoring(slide, durationSec){
       bumpStreak();
       saveStore(store);
 
-      // Fire and forget — don't block UI
-      saveRemoteAttempt({
-        slide,
-        durationSec: result.recordedDurationSec,
-        videoPath: path,
-        transcribeResult,
-        scoreResult,
-      }).catch(e => console.warn("Remote save failed:", e));
+      // Real backend save — wait for it so we can surface failures.
+      // This is fast (a single insert) so the small delay is worth knowing.
+      try {
+        await saveRemoteAttempt({
+          slide,
+          durationSec: result.recordedDurationSec,
+          videoPath: path,
+          transcribeResult,
+          scoreResult,
+          scoringPath: 'real',
+        });
+      } catch(saveErr){
+        console.error("Remote save failed:", saveErr);
+        showSaveFailureBanner(saveErr.message || String(saveErr));
+      }
 
       renderScoreReport(slide, result);
       return;
     }catch(err){
       console.warn("Real backend flow failed, falling back to simulated scoring:", err);
-      mount.innerHTML = `<div class="empty" style="color:var(--warn)">AI scoring failed (${String(err).slice(0,120)}). Falling back to simulated score&hellip;</div>`;
-      // Continue to simulated path below after a short delay
-      await new Promise(r => setTimeout(r, 1200));
+      realScoringError = err;
+      scoringPath = 'simulated-after-fail';
+      // Show the error clearly — DON'T hide it. The rep needs to know their
+      // submission didn't get real AI scoring so they can re-run it later.
+      const errMsg = String(err.message || err).slice(0, 200);
+      mount.innerHTML = `
+        <div class="score-fallback-warning">
+          <div class="score-fallback-icon">⚠️</div>
+          <div class="score-fallback-body">
+            <strong>AI scoring couldn't complete — using practice score instead.</strong>
+            <div class="score-fallback-detail">${errMsg.replace(/</g,'&lt;')}</div>
+            <div class="score-fallback-hint">Your rep WAS saved to your team dashboard. You can re-record this slide anytime to get a real AI score.</div>
+          </div>
+        </div>`;
+      await new Promise(r => setTimeout(r, 2500));
+    }
+  } else if(BACKEND_ENABLED() && !recordedBlob){
+    // No recording, but backend is available — practice mode (no video)
+    scoringPath = 'simulated-practice';
+  } else {
+    // No backend at all
+    scoringPath = 'simulated-no-backend';
+  }
+
+  // Simulated path (no backend, no recording, or backend errored).
+  // CRITICAL: this path ALSO saves to Supabase so the team dashboard reflects
+  // every practice rep — not just the ones where AI scoring succeeded.
+  mount.innerHTML = `<div class="empty">Analyzing your rep&hellip;</div>`;
+  await new Promise(r => setTimeout(r, 1200));
+
+  const result = analyzeAttempt(slide, durationSec);
+  const attempt = {
+    id: 'a_'+Date.now(),
+    slideId: slide.id,
+    score: result.overall,
+    sub: result.sub,
+    ts: result.ts,
+    durationSec
+  };
+  store.attempts.push(attempt);
+  bumpStreak();
+  saveStore(store);
+
+  // Save to Supabase too — even for simulated. Marked so admins can filter.
+  if(BACKEND_ENABLED()){
+    try {
+      await saveRemoteAttempt({
+        slide,
+        durationSec,
+        videoPath: uploadedPath,  // may be null if upload itself failed
+        transcribeResult: null,
+        scoreResult: {
+          overall: result.overall,
+          sub: result.sub,
+          strengths: result.strengths || [],
+          improvements: result.improvements || [],
+          drills: result.drills || [],
+          coach_summary: result.coachSummary || result.coach_summary || '',
+        },
+        scoringPath,
+        scoringError: realScoringError ? String(realScoringError.message || realScoringError).slice(0, 500) : null,
+      });
+    } catch(saveErr){
+      console.error("Remote save failed (simulated path):", saveErr);
+      showSaveFailureBanner(saveErr.message || String(saveErr));
     }
   }
 
-  // Simulated path (no backend, no recording, or backend errored)
-  mount.innerHTML = `<div class="empty">Analyzing your rep&hellip;</div>`;
-  setTimeout(()=>{
-    const result = analyzeAttempt(slide, durationSec);
-    const attempt = {
-      id: 'a_'+Date.now(),
-      slideId: slide.id,
-      score: result.overall,
-      sub: result.sub,
-      ts: result.ts,
-      durationSec
-    };
-    store.attempts.push(attempt);
-    bumpStreak();
-    saveStore(store);
-    renderScoreReport(slide, result);
-  }, 1200);
+  renderScoreReport(slide, result);
+}
+
+/* Banner shown over the score report when a Supabase save fails.
+   This makes the failure VISIBLE so reps and admins can react,
+   instead of silently dropping data. */
+function showSaveFailureBanner(msg){
+  const mount = document.getElementById('scoreReportMount');
+  if(!mount) return;
+  const banner = document.createElement('div');
+  banner.className = 'save-failure-banner';
+  banner.innerHTML = `
+    <div class="save-failure-icon">⚠️</div>
+    <div>
+      <strong>Your score didn't sync to the team dashboard.</strong>
+      <div style="font-size:11.5px;opacity:.85;margin-top:3px">${String(msg).slice(0,180).replace(/</g,'&lt;')}</div>
+      <div style="font-size:11px;opacity:.7;margin-top:4px">Tell Tim — this needs investigating. Your local progress is safe.</div>
+    </div>
+  `;
+  mount.parentNode.insertBefore(banner, mount);
 }
 
 function bumpStreak(){
@@ -6136,7 +6310,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.20</div>
+        <div class="page-eyebrow">Admin · App V.21</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
@@ -6838,16 +7012,38 @@ async function populateOnboardRoster(){
   }
 }
 
-document.getElementById('onboardStart').addEventListener('click', ()=>{
+document.getElementById('onboardStart').addEventListener('click', async ()=>{
   const name = document.getElementById('onboardName').value.trim();
   const role = document.getElementById('onboardRole').value;
   if(!name){
     document.getElementById('onboardName').style.borderColor = 'var(--warn)';
     return;
   }
-  // Save locally; the remote user record will be created on first attempt via ensureRemoteUser()
+  // Save locally first
   store.user = { name, role };
   saveStore(store);
+
+  // Try to resolve to an existing Supabase user record by name. If found,
+  // adopt their remoteId so attempts attach to the right user. If not, the
+  // record will be created on first attempt via ensureRemoteUser().
+  if(BACKEND_ENABLED()){
+    try {
+      const { data: existing } = await supa
+        .from("users")
+        .select("id, role")
+        .ilike("name", name)
+        .limit(1)
+        .maybeSingle();
+      if(existing){
+        store.user.remoteId = existing.id;
+        if(existing.role) store.user.role = existing.role;
+        saveStore(store);
+      }
+    } catch(e) {
+      console.warn('Could not look up existing user:', e);
+    }
+  }
+
   document.getElementById('onboard').classList.add('hidden');
   updateUserPill();
   navigate('dashboard');
