@@ -3365,6 +3365,10 @@ html, body{ max-width:100%; overflow-x:hidden; }
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 L3 6 V12 a9 9 0 0 0 9 9 a9 9 0 0 0 9 -9 V6 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
         Admin
       </div>
+      <div class="nav-item nav-item-admin hidden" data-route="recovery" id="recoveryNavItem">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12 a9 9 0 1 0 3 -6.7"/><polyline points="3 4 3 9 8 9"/></svg>
+        Recovery
+      </div>
 
       <!-- Hidden trigger for unlocking admin via PIN. Triple-tap the brand logo to reveal. -->
       <div class="nav-item nav-unlock-admin" id="unlockAdminBtn" style="display:none;cursor:pointer;color:var(--ink-mute);font-size:11px">
@@ -3381,7 +3385,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
           <div class="user-role" id="userRole">Trainee</div>
         </div>
       </div>
-      <div class="app-version" id="appVersion">V.21</div>
+      <div class="app-version" id="appVersion">V.22</div>
     </div>
   </aside>
 
@@ -4859,6 +4863,7 @@ const routes = {
   leaderboard: renderLeaderboard,
   manager:     renderManager,
   admin:       renderAdmin,
+  recovery:    renderRecovery,
   module:      renderModule, // takes ?id
 };
 let currentRoute = 'dashboard';
@@ -6310,7 +6315,7 @@ async function renderAdmin(){
   $main.innerHTML = `
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-eyebrow">Admin · App V.21</div>
+        <div class="page-eyebrow">Admin · App V.22</div>
         <h1 class="page-title">Manage your <em>team</em>.</h1>
         <p class="page-lede">Add employees so they can sign in by tapping their name. Reset or remove users at any time. Deletes are permanent.</p>
         <div class="page-rule"></div>
@@ -6637,6 +6642,299 @@ function openBioModal(userName){
   document.addEventListener('keydown', function escClose(e){
     if(e.key === 'Escape'){ closeModal(); document.removeEventListener('keydown', escClose); }
   });
+}
+
+/* =====================================================================
+   RECOVERY PAGE
+   Re-scores orphan attempts (rows where video_path is set but
+   overall_score is NULL). These were inserted by a one-time SQL
+   recovery to capture reps whose video uploaded but whose AI scoring
+   failed before v21. Manager can click "Re-score" on each one to run
+   it through the real AssemblyAI + Anthropic flow now.
+   ===================================================================== */
+async function renderRecovery(){
+  if(!isAdminUnlocked()){
+    $main.innerHTML = `
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-eyebrow">Manager · App V.22</div>
+          <h1 class="page-title">Locked.</h1>
+          <p class="page-lede">Triple-tap the PDQ logo to unlock manager features.</p>
+        </div>
+      </div>`;
+    return;
+  }
+  if(!BACKEND_ENABLED()){
+    $main.innerHTML = `
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-eyebrow">Manager · App V.22</div>
+          <h1 class="page-title">Recovery <em>unavailable</em>.</h1>
+          <p class="page-lede">Backend not connected — there's nothing to recover.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  $main.innerHTML = `<div class="empty">Loading recovery queue&hellip;</div>`;
+
+  // Fetch orphan attempts: video_path is set but overall_score is NULL
+  const { data: orphans, error } = await supa
+    .from('attempts')
+    .select('id, user_id, slide_id, video_path, created_at')
+    .is('overall_score', null)
+    .not('video_path', 'is', null)
+    .order('created_at', { ascending: true });
+
+  if(error){
+    $main.innerHTML = `<div class="empty" style="color:var(--warn)">Failed to load: ${error.message}</div>`;
+    return;
+  }
+
+  // Also fetch users for display names
+  const userIds = [...new Set(orphans.map(o => o.user_id).filter(Boolean))];
+  let userMap = {};
+  if(userIds.length){
+    const { data: users } = await supa.from('users').select('id, name').in('id', userIds);
+    (users || []).forEach(u => userMap[u.id] = u.name);
+  }
+
+  const slideMap = {};
+  SLIDES.forEach(s => slideMap[s.id] = s);
+
+  const total = orphans.length;
+  const totalScored = await getTotalScoredCount();
+
+  $main.innerHTML = `
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-eyebrow">Manager · App V.22 · Recovery</div>
+        <h1 class="page-title">Re-score <em>orphan reps</em>.</h1>
+        <p class="page-lede">These attempts were saved (video survived) but AI scoring never finished. Each row links to the original video — click <em>Re-score</em> to run it through AssemblyAI + Anthropic now and store a real score.</p>
+        <div class="page-rule"></div>
+      </div>
+    </div>
+
+    <div class="stats-row" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-label">Awaiting re-score</div>
+        <div class="stat-num">${total}</div>
+        <div class="stat-sub">videos with no AI score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Already scored</div>
+        <div class="stat-num">${totalScored}</div>
+        <div class="stat-sub">total scored attempts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Reps with orphans</div>
+        <div class="stat-num">${userIds.length}</div>
+        <div class="stat-sub">distinct people</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Storage saved</div>
+        <div class="stat-num">${total}</div>
+        <div class="stat-sub">video files preserved</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head">
+        <div class="panel-title">Recovery <em>queue</em></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          ${total > 0 ? `<button class="btn btn-primary" id="recoveryRunAllBtn">▶ Re-score all (${total})</button>` : ''}
+          <div class="panel-tag">${total} pending</div>
+        </div>
+      </div>
+
+      ${total === 0 ? `
+        <div class="empty" style="padding:40px 22px;text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">✓</div>
+          <div style="font-family:'Fraunces',serif;font-size:17px;color:var(--ink)">Nothing to recover.</div>
+          <div style="font-size:12.5px;color:var(--ink-mute);margin-top:6px">All saved videos have a real AI score.</div>
+        </div>
+      ` : `
+        <div class="table-scroll">
+        <table class="team-table admin-table">
+          <thead>
+            <tr>
+              <th>Rep</th>
+              <th>Slide</th>
+              <th style="width:130px">Recorded</th>
+              <th style="width:130px">Video</th>
+              <th style="width:200px">Status</th>
+              <th style="width:200px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recoveryTbody">
+            ${orphans.map(o => {
+              const slide = slideMap[o.slide_id];
+              const slideTitle = slide ? (slide.title.replace(/<[^>]+>/g,'')) : o.slide_id;
+              const userName = userMap[o.user_id] || '— unknown —';
+              const dt = new Date(o.created_at);
+              return `
+                <tr data-attempt-id="${o.id}" data-video-path="${o.video_path}" data-slide-id="${o.slide_id}" data-user-id="${o.user_id}">
+                  <td><strong>${userName}</strong></td>
+                  <td>${slideTitle}</td>
+                  <td><span class="last-active">${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span></td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm recovery-preview-btn">▶ Preview</button>
+                  </td>
+                  <td><span class="recovery-status">⏳ Awaiting re-score</span></td>
+                  <td class="admin-actions-cell">
+                    <button class="btn btn-primary btn-sm recovery-rescore-btn">↻ Re-score</button>
+                    <button class="btn btn-warn btn-sm recovery-discard-btn">Discard</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+        </div>
+      `}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">How recovery <em>works</em></div>
+      </div>
+      <div style="padding:18px 22px;color:var(--ink-soft);font-size:13px;line-height:1.6">
+        <p style="margin:0 0 10px"><strong>Why these reps exist:</strong> in versions before V.22, if AI scoring failed mid-flow the app fell back to a simulated score that didn't reach the dashboard. The video files DID survive in Supabase storage. The one-time SQL recovery inserted these placeholder rows so the videos aren't lost.</p>
+        <p style="margin:0 0 10px"><strong>Clicking <em>Re-score</em>:</strong> generates a 30-minute signed URL for the video, calls AssemblyAI to transcribe it, then calls Anthropic to score it against the slide's rubric. Same flow a fresh recording goes through. Takes 30&ndash;60 seconds per video.</p>
+        <p style="margin:0 0 10px"><strong>Clicking <em>Re-score all</em>:</strong> processes the queue one at a time (sequential — protects from rate limits). Stay on this page while it runs.</p>
+        <p style="margin:0"><strong>Discard:</strong> deletes the attempt record without scoring. Use this only if you know the video is corrupt or shouldn't be counted.</p>
+      </div>
+    </div>
+  `;
+
+  // Wire up Preview buttons — open the video in a new tab via signed URL
+  $main.querySelectorAll('.recovery-preview-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const videoPath = row.dataset.videoPath;
+      btn.disabled = true;
+      btn.textContent = '⏳ Opening…';
+      try {
+        const { data, error } = await supa.storage.from('Recordings').createSignedUrl(videoPath, 60 * 30);
+        if(error || !data?.signedUrl){
+          alert('Could not generate preview URL: ' + (error?.message || 'unknown'));
+        } else {
+          window.open(data.signedUrl, '_blank');
+        }
+      } catch(e){
+        alert('Preview failed: ' + e.message);
+      }
+      btn.disabled = false;
+      btn.textContent = '▶ Preview';
+    });
+  });
+
+  // Wire up Discard buttons
+  $main.querySelectorAll('.recovery-discard-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const attemptId = row.dataset.attemptId;
+      if(!confirm('Permanently delete this attempt record? The video file stays in storage; only the dashboard entry is removed.')) return;
+      btn.disabled = true;
+      const { error } = await supa.from('attempts').delete().eq('id', attemptId);
+      if(error){ alert('Delete failed: ' + error.message); btn.disabled = false; return; }
+      row.remove();
+    });
+  });
+
+  // Wire up Re-score buttons
+  $main.querySelectorAll('.recovery-rescore-btn').forEach(btn => {
+    btn.addEventListener('click', () => rescoreRow(btn.closest('tr')));
+  });
+
+  // Wire up Re-score All button
+  const runAllBtn = document.getElementById('recoveryRunAllBtn');
+  if(runAllBtn){
+    runAllBtn.addEventListener('click', async () => {
+      const rows = Array.from($main.querySelectorAll('#recoveryTbody tr'));
+      if(!rows.length) return;
+      if(!confirm(`Re-score all ${rows.length} orphan videos? This will take roughly ${Math.round(rows.length * 45 / 60)} minutes. Stay on this page.`)) return;
+      runAllBtn.disabled = true;
+      runAllBtn.textContent = `Running 1/${rows.length}…`;
+      for(let i = 0; i < rows.length; i++){
+        runAllBtn.textContent = `Running ${i+1}/${rows.length}…`;
+        await rescoreRow(rows[i]);
+      }
+      runAllBtn.textContent = `✓ Done — ${rows.length} scored`;
+      setTimeout(() => renderRecovery(), 1500);
+    });
+  }
+}
+
+async function getTotalScoredCount(){
+  const { count } = await supa
+    .from('attempts')
+    .select('id', { count: 'exact', head: true })
+    .not('overall_score', 'is', null);
+  return count || 0;
+}
+
+/* Re-score a single recovery row. Updates the row in place with status,
+   then on success either reloads or marks the row green. */
+async function rescoreRow(row){
+  const attemptId = row.dataset.attemptId;
+  const videoPath = row.dataset.videoPath;
+  const slideId = row.dataset.slideId;
+  const status = row.querySelector('.recovery-status');
+  const rescoreBtn = row.querySelector('.recovery-rescore-btn');
+  const discardBtn = row.querySelector('.recovery-discard-btn');
+
+  const slide = SLIDES.find(s => s.id === slideId);
+  if(!slide){
+    status.innerHTML = `<span style="color:var(--warn)">❌ Unknown slide: ${slideId}</span>`;
+    return;
+  }
+
+  rescoreBtn.disabled = true;
+  discardBtn.disabled = true;
+
+  try {
+    status.innerHTML = `⏳ Generating signed URL…`;
+    const { data: urlData, error: urlErr } = await supa.storage
+      .from('Recordings').createSignedUrl(videoPath, 60 * 30);
+    if(urlErr || !urlData?.signedUrl){
+      throw new Error('Signed URL: ' + (urlErr?.message || 'failed'));
+    }
+
+    status.innerHTML = `⏳ Transcribing with AssemblyAI…`;
+    const transcribeResult = await callTranscribe(urlData.signedUrl);
+
+    status.innerHTML = `⏳ Scoring with Claude…`;
+    const scoreResult = await callScore(slide, transcribeResult);
+
+    status.innerHTML = `⏳ Updating record…`;
+    const { error: updErr } = await supa.from('attempts').update({
+      duration_sec: Math.round(transcribeResult.duration_sec || 0),
+      transcript: transcribeResult.transcript || null,
+      overall_score: scoreResult.overall || null,
+      sub_talking: scoreResult.sub?.talking ?? null,
+      sub_empathy: scoreResult.sub?.empathy ?? null,
+      sub_pace: scoreResult.sub?.pace ?? null,
+      sub_sales: scoreResult.sub?.sales ?? null,
+      sub_presence: scoreResult.sub?.presence ?? null,
+      strengths: scoreResult.strengths || [],
+      improvements: scoreResult.improvements || [],
+      drills: scoreResult.drills || [],
+      coach_summary: scoreResult.coach_summary || null,
+    }).eq('id', attemptId);
+    if(updErr) throw new Error('Update: ' + updErr.message);
+
+    status.innerHTML = `<span style="color:var(--good);font-weight:600">✓ Scored ${scoreResult.overall}/100</span>`;
+    rescoreBtn.style.display = 'none';
+    discardBtn.style.display = 'none';
+    row.style.background = 'rgba(90,165,60,0.06)';
+  } catch(err) {
+    console.error('Re-score failed:', err);
+    status.innerHTML = `<span style="color:var(--warn);font-size:11px">❌ ${String(err.message || err).slice(0, 80)}</span>`;
+    rescoreBtn.disabled = false;
+    discardBtn.disabled = false;
+    rescoreBtn.textContent = '↻ Retry';
+  }
 }
 
 function weakestSlideForMe(){
