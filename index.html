@@ -186,6 +186,20 @@ body{
   padding:36px 48px 80px;
   min-width:0;
 }
+/* ── TV / wallboard embed ──────────────────────────────────────────────
+   Activated when the page is loaded with ?tv=1 (typically iframed into
+   the PDQ dashboard's Display TV slideshow). Strips the sidebar / brand
+   chrome / onboard gate so the routed content (typically the
+   Leaderboard) takes the full viewport on a wallboard. */
+body.tv-embed .app{ grid-template-columns: 1fr; }
+body.tv-embed .sidebar,
+body.tv-embed #onboard,
+body.tv-embed .user-pill,
+body.tv-embed #userPill,
+body.tv-embed .app-version{ display:none !important; }
+body.tv-embed .main{ padding: 20px 32px 24px; }
+body.tv-embed .brand-swish-top,
+body.tv-embed .brand-swish-bottom{ display:none !important; }
 .page-header{
   display:flex; align-items:flex-end; justify-content:space-between;
   gap:24px;
@@ -7409,8 +7423,28 @@ document.querySelectorAll('.nav-item').forEach(el=>{
 /* =====================================================================
    Boot
    ===================================================================== */
-maybeShowOnboard();
-if(store.user) navigate('dashboard');
+(function bootRouter(){
+  // Deep-link support. ?route=<key> picks the initial route; ?tv=1
+  // declares the page is being iframed onto a public wallboard
+  // (the PDQ dashboard's Display TV slideshow), so we bypass the
+  // onboard "tap your name" gate and drop a `tv-embed` body class
+  // that hides the sidebar / user pill / brand swishes via CSS.
+  const params = new URLSearchParams(location.search);
+  const routeParam = params.get('route');
+  const isTv = params.get('tv') === '1';
+  const targetRoute = (routeParam && routes[routeParam]) ? routeParam : null;
+
+  if(isTv){
+    document.body.classList.add('tv-embed');
+    const onb = document.getElementById('onboard');
+    if(onb) onb.classList.add('hidden');
+    navigate(targetRoute || 'dashboard');
+    return;
+  }
+
+  maybeShowOnboard();
+  if(store.user) navigate(targetRoute || 'dashboard');
+})();
 
 // Triple-tap (or triple-click) the brand logo to bring up the manager PIN prompt.
 // Discoverable by managers who know about it; invisible to trainees.
