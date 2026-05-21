@@ -254,7 +254,7 @@ body.tv-embed .lb-avatar{
   font-size:clamp(15px,1.8vh,26px);
 }
 body.tv-embed .lb-name{ font-size:clamp(20px,2.4vh,36px); line-height:1.15; }
-body.tv-embed .lb-meta{ font-size:clamp(14px,1.6vh,22px); margin-top:4px; }
+body.tv-embed .lb-meta{ font-size:clamp(14px,1.6vh,22px); width:clamp(150px,13vw,260px); }
 body.tv-embed .lb-row .score-pill{
   font-size:clamp(22px,2.6vh,40px);
   padding:clamp(4px,.7vh,10px) clamp(14px,1.5vw,26px);
@@ -3077,7 +3077,7 @@ body.tv-embed .lb-row .score-pill{
 }
 .lb-avatar.green{ background:linear-gradient(135deg, var(--pdq-green), var(--pdq-green-deep)); }
 .lb-avatar.gold{ background:linear-gradient(135deg, #e8b347, #c98a1a); box-shadow:0 0 0 2px #fff, 0 0 0 4px #e8b347; }
-.lb-name-block{ flex:1; min-width:0; }
+.lb-name-block{ flex:1; min-width:0; display:flex; align-items:baseline; gap:12px; }
 .lb-name{
   font-family:'Inter', sans-serif;
   font-weight:600;
@@ -3102,7 +3102,9 @@ body.tv-embed .lb-row .score-pill{
   font-style:italic;
   font-size:12px;
   color:var(--ink-mute);
-  margin-top:2px;
+  flex-shrink:0;
+  white-space:nowrap;
+  width:118px;
 }
 .lb-score-pill{ flex-shrink:0; }
 
@@ -3327,8 +3329,9 @@ html, body{ max-width:100%; overflow-x:hidden; }
   .lb-rank{ width:32px; font-size:15px; }
   .lb-row.top .lb-rank{ font-size:20px; }
   .lb-avatar{ width:34px; height:34px; font-size:12px; }
+  .lb-name-block{ gap:8px; }
   .lb-name{ font-size:13.5px; }
-  .lb-meta{ font-size:11.5px; }
+  .lb-meta{ font-size:11.5px; width:96px; }
   .lb-you{ font-size:8.5px; padding:1px 5px; }
 
   /* coach summary block — tighten margins */
@@ -7140,8 +7143,8 @@ async function renderLeaderboard(){
               <div class="lb-rank">${medal || '#' + rank}</div>
               <div class="lb-avatar ${rank===1?'gold':(rank<=3?'green':'')}">${initials}</div>
               <div class="lb-name-block">
-                <div class="lb-name">${u.name}${isMe?' <span class="lb-you">YOU</span>':''}</div>
                 <div class="lb-meta">${u.count} ${u.count===1?'rep':'reps'} &middot; best ${u.best}</div>
+                <div class="lb-name">${u.name}${isMe?' <span class="lb-you">YOU</span>':''}</div>
               </div>
               <div class="lb-score-pill">
                 <span class="score-pill ${band.cls}">${u.avg}</span>
